@@ -4,16 +4,62 @@ import { useState, useRef, useEffect } from "react";
 // <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Geist+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 
 const C = {
-  bg:"#020617", sidebar:"#060d1f", card:"#0a1628", card2:"#0d1b2e",
-  border:"#0e2040", border2:"#132545",
-  cyan:"#22d3ee", cyanDim:"#0c4a58", cyanBg:"#061520",
-  green:"#4ade80", yellow:"#facc15", red:"#f87171",
-  purple:"#a78bfa", blue:"#60a5fa", orange:"#fb923c",
-  text:"#e2e8f0", textSub:"#64748b", textMid:"#334155",
-  syne:"'Syne',sans-serif",
-  sans:"'Instrument Sans',sans-serif",
-  mono:"'Geist Mono',monospace",
+  bg: "#020617",
+  sidebar: "rgba(6, 13, 31, 0.7)",
+  card: "rgba(10, 22, 40, 0.5)",
+  card2: "rgba(13, 27, 46, 0.6)",
+  border: "rgba(34, 211, 238, 0.08)",
+  border2: "rgba(34, 211, 238, 0.15)",
+  glass: "rgba(255, 255, 255, 0.03)",
+  glassBorder: "rgba(255, 255, 255, 0.08)",
+  cyan: "#22d3ee",
+  cyanDim: "#0c4a58",
+  cyanBg: "rgba(34, 211, 238, 0.04)",
+  green: "#4ade80",
+  yellow: "#facc15",
+  red: "#f87171",
+  purple: "#a78bfa",
+  blue: "#60a5fa",
+  orange: "#fb923c",
+  text: "#f1f5f9",
+  textSub: "#94a3b8",
+  textMid: "#475569",
+  syne: "'Syne', sans-serif",
+  sans: "'Instrument Sans', sans-serif",
+  mono: "'Geist Mono', monospace",
 };
+
+// --- PREMIUM BACKGROUND COMPONENTS ---
+function PremiumBackground() {
+  return (
+    <div style={{ position: "fixed", inset: 0, overflow: "hidden", zIndex: -1, background: C.bg }}>
+      {/* Animated Mesh Blobs */}
+      <div style={{
+        position: "absolute", top: "10%", left: "15%", width: "50vw", height: "50vw",
+        background: `radial-gradient(circle, ${C.cyan}12 0%, transparent 70%)`,
+        borderRadius: "50%", filter: "blur(80px)", animation: "float 20s infinite alternate"
+      }} />
+      <div style={{
+        position: "absolute", bottom: "10%", right: "10%", width: "40vw", height: "40vw",
+        background: `radial-gradient(circle, ${C.purple}10 0%, transparent 70%)`,
+        borderRadius: "50%", filter: "blur(100px)", animation: "float 25s infinite alternate-reverse"
+      }} />
+      <div style={{
+        position: "absolute", top: "40%", left: "50%", width: "30vw", height: "30vw",
+        background: `radial-gradient(circle, ${C.blue}08 0%, transparent 70%)`,
+        borderRadius: "50%", filter: "blur(120px)", animation: "float 18s infinite linear"
+      }} />
+      <style>{`
+        @keyframes float {
+          0% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(5%, 5%) scale(1.05); }
+          100% { transform: translate(-2%, 3%) scale(0.95); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 
 const NAV = [
   { id:"dashboard", label:"Dashboard", icon:"⬡", color:C.cyan,
@@ -56,48 +102,162 @@ function MacDots() {
 
 function ProgBar({pct,color}) {
   return (
-    <div style={{height:3,background:C.border,borderRadius:99,overflow:"hidden",marginTop:4}}>
-      <div style={{width:`${Math.min(pct,100)}%`,height:"100%",background:color,borderRadius:99}}/>
+    <div style={{height:4,background:"rgba(255,255,255,0.05)",borderRadius:99,overflow:"hidden",marginTop:6}}>
+      <div style={{
+        width:`${Math.min(pct,100)}%`,
+        height:"100%",
+        background:color,
+        borderRadius:99,
+        boxShadow:`0 0 10px ${color}55`
+      }}/>
     </div>
   );
 }
 
 function Panel({title,children,action,onAction,accent}) {
+  const [hover, setHover] = useState(false);
   return (
-    <div style={{background:C.card,border:`1px solid ${accent?accent+"44":C.border}`,borderRadius:14,overflow:"hidden",marginBottom:16}}>
-      <div style={{padding:"11px 18px",borderBottom:`1px solid ${accent?accent+"33":C.border}`,background:C.card2,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <div style={{display:"flex",alignItems:"center",gap:12}}>
+    <div 
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        background: "rgba(13, 27, 46, 0.4)",
+        backdropFilter: "blur(24px)",
+        border: `1px solid ${accent ? accent + "44" : "rgba(255,255,255,0.08)"}`,
+        borderRadius: 24,
+        overflow: "hidden",
+        marginBottom: 24,
+        boxShadow: hover ? `0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px ${accent ? accent + "33" : "rgba(34, 211, 238, 0.1)"}` : "0 8px 32px rgba(0,0,0,0.2)",
+        transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+        transform: hover ? "translateY(-2px)" : "none"
+      }}>
+      <div style={{
+        padding: "16px 28px",
+        borderBottom: `1px solid ${accent ? accent + "22" : "rgba(255,255,255,0.06)"}`,
+        background: "rgba(255,255,255,0.02)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between"
+      }}>
+        <div style={{display: "flex", alignItems: "center", gap: 14}}>
           <MacDots/>
-          <span style={{fontSize:11,fontWeight:700,color:C.text,fontFamily:C.sans,letterSpacing:"0.04em"}}>{title}</span>
+          <span style={{
+            fontSize: 10,
+            fontWeight: 800,
+            color: C.text,
+            fontFamily: C.syne,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            opacity: 0.9
+          }}>{title}</span>
         </div>
-        {action&&(
-          <span onClick={onAction} style={{fontSize:10,color:accent||C.cyan,fontFamily:C.mono,cursor:onAction?"pointer":"default"}}>
+        {action && (
+          <button 
+            onClick={onAction}
+            style={{
+              fontSize: 10,
+              fontWeight: 800,
+              color: "#fff",
+              fontFamily: C.mono,
+              background: accent ? accent + "22" : C.cyan + "22",
+              border: `1px solid ${accent ? accent + "44" : C.cyan + "44"}`,
+              padding: "6px 14px",
+              borderRadius: 10,
+              cursor: "pointer",
+              transition: "all 0.2s",
+              letterSpacing: "0.05em",
+              boxShadow: `0 0 10px ${accent ? accent + "11" : C.cyan + "11"}`
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = accent || C.cyan;
+              e.currentTarget.style.color = "#000";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = accent ? accent + "22" : C.cyan + "22";
+              e.currentTarget.style.color = "#fff";
+            }}
+          >
             {action}
-          </span>
+          </button>
         )}
       </div>
-      {children}
+      <div style={{padding: "12px 0"}}>
+        {children}
+      </div>
     </div>
   );
 }
 
+
 function KpiCard({label,value,unit,accent,glow,sub,onClick}) {
+  const [hover, setHover] = useState(false);
   return (
     <div onClick={onClick}
-      style={{background:C.card,border:`1px solid ${onClick?C.cyan:C.border}`,borderRadius:12,padding:"16px 18px",borderLeft:`3px solid ${accent}`,cursor:onClick?"pointer":"default",transition:"all 0.12s"}}
-      onMouseEnter={e=>{if(onClick)e.currentTarget.style.background=C.cyanBg;}}
-      onMouseLeave={e=>{if(onClick)e.currentTarget.style.background=C.card;}}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        background: hover ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.03)",
+        backdropFilter: "blur(20px)",
+        border: `1px solid ${hover ? accent + "aa" : "rgba(255,255,255,0.08)"}`,
+        borderRadius: 24,
+        padding: "24px 28px",
+        cursor: onClick ? "pointer" : "default",
+        transition: "all 0.4s cubic-bezier(0.16,1,0.3,1)",
+        transform: hover ? "translateY(-6px) scale(1.02)" : "none",
+        boxShadow: hover ? `0 20px 40px rgba(0,0,0,0.5), 0 0 30px ${accent}22` : "0 8px 16px rgba(0,0,0,0.1)",
+        position: "relative",
+        overflow: "hidden"
+      }}
     >
-      <div style={{fontSize:10,color:onClick?C.cyan:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:6}}>
-        {onClick?"🔍 ":""}{label}
+      {/* Decorative Glow Circle */}
+      <div style={{
+        position: "absolute", top: -20, right: -20, width: 80, height: 80,
+        background: accent, filter: "blur(40px)", opacity: hover ? 0.3 : 0.1,
+        transition: "opacity 0.4s"
+      }} />
+
+      <div style={{
+        fontSize: 9,
+        color: hover ? "#fff" : C.textSub,
+        fontFamily: C.syne,
+        textTransform: "uppercase",
+        letterSpacing: "0.15em",
+        marginBottom: 12,
+        fontWeight: 800,
+        opacity: 0.8
+      }}>
+        {onClick ? "✦ " : ""}{label}
       </div>
-      <div style={{fontSize:22,fontWeight:800,color:accent,fontFamily:C.syne,letterSpacing:"-0.02em",lineHeight:1,
-        textShadow:glow?`0 0 18px ${accent}55`:"none"}}>{value}</div>
-      {unit&&<div style={{fontSize:10,color:C.textSub,marginTop:4,fontFamily:C.mono}}>{unit}</div>}
-      {sub&&<div style={{fontSize:9,color:C.cyan,marginTop:3,fontFamily:C.sans}}>{sub}</div>}
+      
+      <div style={{
+        fontSize: 32,
+        fontWeight: 800,
+        color: "#fff",
+        fontFamily: C.syne,
+        letterSpacing: "-0.04em",
+        lineHeight: 1,
+        display: "flex",
+        alignItems: "baseline",
+        gap: 6
+      }}>
+        {value}
+        {unit && <span style={{fontSize: 12, color: C.textSub, fontFamily: C.mono, fontWeight: 500}}>{unit}</span>}
+      </div>
+      
+      {sub && (
+        <div style={{
+          fontSize: 10, color: accent, marginTop: 12, fontFamily: C.sans, 
+          fontWeight: 700, display: "flex", alignItems: "center", gap: 6,
+          opacity: hover ? 1 : 0.8
+        }}>
+          <span style={{width: 4, height: 4, borderRadius: "50%", background: accent}} />
+          {sub}
+        </div>
+      )}
     </div>
   );
 }
+
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 const ARTIKEL_PO = {
@@ -8121,48 +8281,43 @@ function TabKoreksi({koreksiQueue,setKoreksiQueue,sharedBundleDB,setSharedBundle
       </Panel>
 
       {/* Pending Section */}
-      {pending.length>0&&(
-        <Panel title={`⚠ MENUNGGU REVIEW OWNER — ${pending.length} ITEM`} accent={C.yellow}>
-          <div style={{padding:"6px 14px 4px",fontSize:9,color:C.yellow,fontFamily:C.sans,background:`${C.yellow}08`,borderBottom:`1px solid ${C.yellow}22`}}>
-            Bundle di bawah ini <strong>TERTUNDA</strong> dan tidak dapat lanjut ke tahap berikutnya sampai Owner mereview.
+      {pending.length > 0 && (
+        <Panel title={`⚠ PENDING REVIEW OWNER — ${pending.length} ITEM`} accent={C.yellow}>
+          <div style={{ padding: "12px 24px", fontSize: 11, color: C.yellow, background: `${C.yellow}08`, borderBottom: `1px solid ${C.yellow}22`, fontWeight: 600 }}>
+            Bundle di bawah ini memerlukan otorisasi Owner untuk melanjutkan ke tahap berikutnya.
           </div>
-          <div style={{overflowX:"auto"}}>
-            <table style={{width:"100%",borderCollapse:"collapse",minWidth:900}}>
-              <thead><tr style={{background:"#0e204055"}}>
-                {["Waktu","PO","Artikel","Tahap","Karyawan","QTY Target","QTY Aktual","Selisih","Alasan","Tipe","Aksi"].map(h=>(<th key={h} style={TH2}>{h}</th>))}
-              </tr></thead>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1000 }}>
+              <thead>
+                <tr style={{ background: "rgba(255,255,255,0.02)" }}>
+                  {["WAKTU", "PO", "ARTIKEL", "TAHAP", "KARYAWAN", "TARGET", "AKTUAL", "SELISIH", "ALASAN", "AKSI"].map(h => (
+                    <th key={h} style={TH2}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
               <tbody>
-                {pending.map((k,i)=>(
-                  <tr key={k.id} style={{borderBottom:`1px solid ${C.border}`,background:i%2===0?C.card:C.card2}}>
-                    <td style={{...TD2(i),whiteSpace:"nowrap"}}><span style={{fontFamily:C.mono,fontSize:10,color:C.textSub}}>{k.waktu}</span></td>
-                    <td style={TD2(i)}><span style={{fontFamily:C.mono,fontSize:10,fontWeight:700}}>{k.po}</span></td>
-                    <td style={TD2(i)}><span style={{fontWeight:600}}>{k.model} {k.warna} {k.size}</span></td>
+                {pending.map((k, i) => (
+                  <tr key={k.id} style={{ borderBottom: `1px solid ${C.border}`, background: i % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent" }}>
+                    <td style={TD2(i)}><span style={{ fontFamily: C.mono, fontSize: 11, color: C.textSub }}>{k.waktu}</span></td>
+                    <td style={TD2(i)}><span style={{ fontFamily: C.mono, fontSize: 12, fontWeight: 700, color: C.cyan }}>{k.po}</span></td>
+                    <td style={TD2(i)}><span style={{ fontWeight: 600, fontSize: 13 }}>{k.model} {k.warna} {k.size}</span></td>
                     <td style={TD2(i)}>
-                      <span style={{fontSize:9,fontWeight:700,padding:"2px 8px",borderRadius:99,fontFamily:C.mono,
-                        background:TAHAP_COL[k.tahap]?`${TAHAP_COL[k.tahap]}15`:`${C.textSub}15`,
-                        color:TAHAP_COL[k.tahap]||C.textSub}}>
+                      <span style={{ fontSize: 9, fontWeight: 800, padding: "4px 10px", borderRadius: 8, fontFamily: C.mono, background: `${TAHAP_COL[k.tahap]}15`, color: TAHAP_COL[k.tahap] || C.textSub, border: `1px solid ${TAHAP_COL[k.tahap]}22` }}>
                         {k.tahapLabel}
                       </span>
                     </td>
-                    <td style={TD2(i)}><span style={{fontSize:10}}>{k.karyawan}</span></td>
-                    <td style={{...TD2(i),textAlign:"center"}}><span style={{fontFamily:C.mono,fontWeight:700,color:C.textSub}}>{k.qtyTarget}</span></td>
-                    <td style={{...TD2(i),textAlign:"center"}}><span style={{fontFamily:C.mono,fontWeight:800,color:k.tipe==="lebih"?C.red:C.yellow}}>{k.qtyAktual}</span></td>
-                    <td style={{...TD2(i),textAlign:"center"}}><span style={{fontFamily:C.mono,fontWeight:800,color:k.selisih>0?C.red:C.yellow}}>{k.selisih>0?"+":""}{k.selisih}</span></td>
-                    <td style={TD2(i)}><span style={{fontSize:10,color:C.text}}>{k.alasan||"-"}</span></td>
+                    <td style={TD2(i)}><span style={{ fontSize: 12, color: C.textMid }}>{k.karyawan}</span></td>
+                    <td style={{ ...TD2(i), textAlign: "center" }}><span style={{ fontFamily: C.mono, fontWeight: 700, color: C.textSub }}>{k.qtyTarget}</span></td>
+                    <td style={{ ...TD2(i), textAlign: "center" }}><span style={{ fontFamily: C.mono, fontWeight: 800, color: k.tipe === "lebih" ? C.red : C.yellow }}>{k.qtyAktual}</span></td>
+                    <td style={{ ...TD2(i), textAlign: "center" }}><span style={{ fontFamily: C.mono, fontWeight: 800, color: k.selisih > 0 ? C.red : C.yellow }}>{k.selisih > 0 ? "+" : ""}{k.selisih}</span></td>
+                    <td style={TD2(i)}><span style={{ fontSize: 12, fontStyle: "italic", color: C.textMid }}>{k.alasan || "-"}</span></td>
                     <td style={TD2(i)}>
-                      <span style={{fontSize:8,padding:"2px 7px",borderRadius:99,fontFamily:C.mono,fontWeight:700,
-                        background:k.tipe==="lebih"?`${C.red}15`:`${C.yellow}15`,
-                        color:k.tipe==="lebih"?C.red:C.yellow}}>
-                        {k.tipe==="lebih"?"▲ LEBIH":"▼ KURANG"}
-                      </span>
-                    </td>
-                    <td style={TD2(i)}>
-                      <div style={{display:"flex",gap:5}}>
-                        <button onClick={()=>setConfirmAction({action:"approve",kor:k})}
-                          style={{padding:"4px 10px",fontSize:9,fontWeight:700,fontFamily:C.mono,background:C.green,color:"#000",border:"none",borderRadius:5,cursor:"pointer"}}>✓ APPROVE</button>
-                        {k.tipe==="lebih"&&(
-                          <button onClick={()=>setConfirmAction({action:"reject",kor:k})}
-                            style={{padding:"4px 10px",fontSize:9,fontWeight:700,fontFamily:C.mono,background:C.red,color:"#fff",border:"none",borderRadius:5,cursor:"pointer"}}>✗ REJECT</button>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button onClick={() => setConfirmAction({ action: "approve", kor: k })}
+                          style={{ padding: "6px 12px", fontSize: 10, fontWeight: 800, background: C.green, color: "#000", border: "none", borderRadius: 8, cursor: "pointer", transition: "all 0.2s" }}>✓ APPROVE</button>
+                        {k.tipe === "lebih" && (
+                          <button onClick={() => setConfirmAction({ action: "reject", kor: k })}
+                            style={{ padding: "6px 12px", fontSize: 10, fontWeight: 800, background: C.red, color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", transition: "all 0.2s" }}>✗ REJECT</button>
                         )}
                       </div>
                     </td>
@@ -8175,51 +8330,40 @@ function TabKoreksi({koreksiQueue,setKoreksiQueue,sharedBundleDB,setSharedBundle
       )}
 
       {/* Riwayat */}
-      <Panel title={`RIWAYAT KOREKSI — ${filtered.filter(k=>k.status!=="pending").length} entri`} accent={C.textSub}>
-        <div style={{overflowX:"auto"}}>
-          <table style={{width:"100%",borderCollapse:"collapse",minWidth:900}}>
-            <thead><tr style={{background:"#0e204055"}}>
-              {["Status","Waktu","PO","Artikel","Tahap","Karyawan","QTY Target","QTY Aktual","Selisih","Alasan","Tipe","Review"].map(h=>(<th key={h} style={TH2}>{h}</th>))}
-            </tr></thead>
+      <Panel title={`HISTORI KOREKSI — ${filtered.filter(k => k.status !== "pending").length} ENTRI`} accent={C.textSub}>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1000 }}>
+            <thead>
+              <tr style={{ background: "rgba(255,255,255,0.02)" }}>
+                {["STATUS", "WAKTU", "PO", "ARTIKEL", "TAHAP", "KARYAWAN", "TARGET", "AKTUAL", "SELISIH", "REVIEW BY"].map(h => (
+                  <th key={h} style={TH2}>{h}</th>
+                ))}
+              </tr>
+            </thead>
             <tbody>
-              {filtered.filter(k=>k.status!=="pending").length===0?(
-                <tr><td colSpan={12} style={{padding:"40px",textAlign:"center",color:C.textMid,fontFamily:C.sans,fontSize:12}}>Belum ada riwayat koreksi.</td></tr>
-              ):filtered.filter(k=>k.status!=="pending").map((k,i)=>{
-                const stCol=k.status==="approved"?C.green:C.red;
+              {filtered.filter(k => k.status !== "pending").length === 0 ? (
+                <tr><td colSpan={10} style={{ padding: "60px", textAlign: "center", color: C.textMid, fontFamily: C.sans, fontSize: 13, opacity: 0.6 }}>Belum ada histori koreksi untuk filter ini.</td></tr>
+              ) : filtered.filter(k => k.status !== "pending").map((k, i) => {
+                const st = k.status === "approved" ? { col: C.green, bg: `${C.green}15`, label: "APPROVED" } : { col: C.red, bg: `${C.red}15`, label: "REJECTED" };
                 return (
-                  <tr key={k.id} style={{borderBottom:`1px solid ${C.border}`,background:i%2===0?C.card:C.card2}}>
+                  <tr key={k.id} style={{ borderBottom: `1px solid ${C.border}`, background: i % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent" }}>
                     <td style={TD2(i)}>
-                      <span style={{fontSize:9,fontWeight:700,padding:"2px 8px",borderRadius:99,fontFamily:C.mono,
-                        background:`${stCol}15`,color:stCol,border:`1px solid ${stCol}33`}}>
-                        {k.status==="approved"?"✓ SETUJU":"✗ TOLAK"}
-                      </span>
+                      <span style={{ fontSize: 9, fontWeight: 800, padding: "4px 10px", borderRadius: 8, fontFamily: C.mono, background: st.bg, color: st.col, border: `1px solid ${st.col}22` }}>{st.label}</span>
                     </td>
-                    <td style={{...TD2(i),whiteSpace:"nowrap"}}><span style={{fontFamily:C.mono,fontSize:10,color:C.textSub}}>{k.waktu}</span></td>
-                    <td style={TD2(i)}><span style={{fontFamily:C.mono,fontSize:10,fontWeight:700}}>{k.po}</span></td>
-                    <td style={TD2(i)}><span style={{fontWeight:600}}>{k.model} {k.warna} {k.size}</span></td>
+                    <td style={TD2(i)}><span style={{ fontFamily: C.mono, fontSize: 11, color: C.textSub }}>{k.waktu}</span></td>
+                    <td style={TD2(i)}><span style={{ fontFamily: C.mono, fontSize: 12, fontWeight: 700 }}>{k.po}</span></td>
+                    <td style={TD2(i)}><span style={{ fontSize: 13, color: C.textMid }}>{k.model} {k.warna} {k.size}</span></td>
                     <td style={TD2(i)}>
-                      <span style={{fontSize:9,fontWeight:700,padding:"2px 8px",borderRadius:99,fontFamily:C.mono,
-                        background:TAHAP_COL[k.tahap]?`${TAHAP_COL[k.tahap]}15`:`${C.textSub}15`,
-                        color:TAHAP_COL[k.tahap]||C.textSub}}>
-                        {k.tahapLabel}
-                      </span>
+                      <span style={{ fontSize: 9, fontWeight: 700, opacity: 0.7 }}>{k.tahapLabel}</span>
                     </td>
-                    <td style={TD2(i)}><span style={{fontSize:10}}>{k.karyawan}</span></td>
-                    <td style={{...TD2(i),textAlign:"center"}}><span style={{fontFamily:C.mono,fontWeight:700,color:C.textSub}}>{k.qtyTarget}</span></td>
-                    <td style={{...TD2(i),textAlign:"center"}}><span style={{fontFamily:C.mono,fontWeight:800,color:k.status==="rejected"?C.red:C.text}}>{k.status==="rejected"?k.qtyTarget:k.qtyAktual}</span></td>
-                    <td style={{...TD2(i),textAlign:"center"}}><span style={{fontFamily:C.mono,fontWeight:800,color:k.selisih>0?C.red:C.yellow}}>{k.selisih>0?"+":""}{k.selisih}</span></td>
-                    <td style={TD2(i)}><span style={{fontSize:10,color:C.text}}>{k.alasan||"-"}</span></td>
+                    <td style={TD2(i)}><span style={{ fontSize: 12 }}>{k.karyawan}</span></td>
+                    <td style={{ ...TD2(i), textAlign: "center" }}><span style={{ fontFamily: C.mono }}>{k.qtyTarget}</span></td>
+                    <td style={{ ...TD2(i), textAlign: "center" }}><span style={{ fontFamily: C.mono, fontWeight: 700, color: k.status === "rejected" ? C.textSub : C.text }}>{k.status === "rejected" ? k.qtyTarget : k.qtyAktual}</span></td>
+                    <td style={{ ...TD2(i), textAlign: "center" }}><span style={{ fontFamily: C.mono, color: k.selisih > 0 ? C.red : C.yellow }}>{k.selisih > 0 ? "+" : ""}{k.selisih}</span></td>
                     <td style={TD2(i)}>
-                      <span style={{fontSize:8,padding:"2px 7px",borderRadius:99,fontFamily:C.mono,fontWeight:700,
-                        background:k.tipe==="lebih"?`${C.red}15`:`${C.yellow}15`,
-                        color:k.tipe==="lebih"?C.red:C.yellow}}>
-                        {k.tipe==="lebih"?"▲ LEBIH":"▼ KURANG"}
-                      </span>
-                    </td>
-                    <td style={TD2(i)}>
-                      <div style={{fontSize:9,color:C.textSub,fontFamily:C.mono}}>
-                        {k.reviewBy&&<div>{k.reviewBy}</div>}
-                        {k.reviewWaktu&&<div style={{fontSize:8,color:C.textMid}}>{k.reviewWaktu}</div>}
+                      <div style={{ fontSize: 10, color: C.textSub, fontFamily: C.mono }}>
+                        {k.reviewBy && <div>{k.reviewBy}</div>}
+                        {k.reviewWaktu && <div style={{ opacity: 0.5 }}>{k.reviewWaktu}</div>}
                       </div>
                     </td>
                   </tr>
@@ -8230,215 +8374,230 @@ function TabKoreksi({koreksiQueue,setKoreksiQueue,sharedBundleDB,setSharedBundle
         </div>
       </Panel>
 
-      <div style={{padding:"9px 13px",background:C.card2,borderRadius:8,border:`1px solid ${C.border}`,fontSize:9,color:C.textMid,fontFamily:C.sans,lineHeight:1.7}}>
-        ◇ Koreksi Data memvalidasi QTY produksi di setiap tahap. Kelebihan QTY <strong style={{color:C.red}}>harus di-review Owner</strong> sebelum bundle dapat lanjut ke tahap berikutnya. Penolakan akan mengembalikan QTY ke target awal untuk mencegah <strong style={{color:C.yellow}}>overpay</strong>.
-      </div>
-
       {/* Modal Konfirmasi dengan Auth */}
-      {confirmAction&&(
-        <div style={{position:"fixed",inset:0,background:"#000000cc",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center"}}>
-          <div style={{background:C.card,border:`1px solid ${confirmAction.action==="approve"?C.green:C.red}55`,borderRadius:14,padding:"24px",width:460,maxWidth:"92vw"}}>
-            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}><MacDots/><span style={{fontSize:12,fontWeight:700,color:confirmAction.action==="approve"?C.green:C.red,fontFamily:C.sans}}>{confirmAction.action==="approve"?"APPROVE KOREKSI":"REJECT KOREKSI"}</span></div>
+      {confirmAction && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }}>
+          <div style={{ background: C.card, border: `1px solid ${confirmAction.action === "approve" ? C.green : C.red}44`, borderRadius: 20, padding: "32px", width: 480, maxWidth: "92vw", boxShadow: "0 20px 40px rgba(0,0,0,0.4)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
+              <MacDots />
+              <span style={{ fontSize: 13, fontWeight: 800, color: confirmAction.action === "approve" ? C.green : C.red, fontFamily: C.syne, letterSpacing: "0.05em" }}>
+                {confirmAction.action === "approve" ? "APPROVE KOREKSI" : "REJECT KOREKSI"}
+              </span>
+            </div>
             
-            <div style={{padding:"12px 14px",background:"#050e1f",borderRadius:8,border:`1px solid ${C.border}`,marginBottom:14}}>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
-                <div><div style={{fontSize:8,color:C.textMid,fontFamily:C.sans}}>PO</div><div style={{fontSize:11,color:C.cyan,fontFamily:C.mono,fontWeight:700}}>{confirmAction.kor.po}</div></div>
-                <div><div style={{fontSize:8,color:C.textMid,fontFamily:C.sans}}>Artikel</div><div style={{fontSize:11,color:C.text,fontFamily:C.sans,fontWeight:600}}>{confirmAction.kor.model} {confirmAction.kor.warna} {confirmAction.kor.size}</div></div>
-                <div><div style={{fontSize:8,color:C.textMid,fontFamily:C.sans}}>Tahap</div><div style={{fontSize:11,color:TAHAP_COL[confirmAction.kor.tahap]||C.text,fontFamily:C.sans,fontWeight:600}}>{confirmAction.kor.tahapLabel}</div></div>
-                <div><div style={{fontSize:8,color:C.textMid,fontFamily:C.sans}}>Karyawan</div><div style={{fontSize:11,color:C.text,fontFamily:C.sans}}>{confirmAction.kor.karyawan}</div></div>
+            <div style={{ padding: "16px 20px", background: "rgba(0,0,0,0.3)", borderRadius: 12, border: `1px solid ${C.border}`, marginBottom: 20 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+                <div><div style={{ fontSize: 9, color: C.textSub, fontFamily: C.sans, textTransform: "uppercase", letterSpacing: "0.05em" }}>PO</div><div style={{ fontSize: 12, color: C.cyan, fontFamily: C.mono, fontWeight: 700 }}>{confirmAction.kor.po}</div></div>
+                <div><div style={{ fontSize: 9, color: C.textSub, fontFamily: C.sans, textTransform: "uppercase", letterSpacing: "0.05em" }}>Artikel</div><div style={{ fontSize: 12, color: C.text, fontFamily: C.sans, fontWeight: 700 }}>{confirmAction.kor.model} {confirmAction.kor.warna} {confirmAction.kor.size}</div></div>
               </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,borderTop:`1px solid ${C.border}`,paddingTop:8}}>
-                <div style={{textAlign:"center"}}><div style={{fontSize:8,color:C.textMid}}>Target</div><div style={{fontSize:16,fontWeight:800,color:C.textSub,fontFamily:C.syne}}>{confirmAction.kor.qtyTarget}</div></div>
-                <div style={{textAlign:"center"}}><div style={{fontSize:8,color:C.textMid}}>Aktual</div><div style={{fontSize:16,fontWeight:800,color:confirmAction.kor.tipe==="lebih"?C.red:C.yellow,fontFamily:C.syne}}>{confirmAction.kor.qtyAktual}</div></div>
-                <div style={{textAlign:"center"}}><div style={{fontSize:8,color:C.textMid}}>Selisih</div><div style={{fontSize:16,fontWeight:800,color:confirmAction.kor.selisih>0?C.red:C.yellow,fontFamily:C.syne}}>{confirmAction.kor.selisih>0?"+":""}{confirmAction.kor.selisih}</div></div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, borderTop: `1px solid ${C.border}`, paddingTop: 12 }}>
+                <div><div style={{ fontSize: 9, color: C.textSub, fontFamily: C.sans }}>TAHAP</div><div style={{ fontSize: 12, color: TAHAP_COL[confirmAction.kor.tahap] || C.text, fontWeight: 700 }}>{confirmAction.kor.tahapLabel}</div></div>
+                <div><div style={{ fontSize: 9, color: C.textSub, fontFamily: C.sans }}>KARYAWAN</div><div style={{ fontSize: 12, color: C.text, fontWeight: 700 }}>{confirmAction.kor.karyawan}</div></div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, borderTop: `1px solid ${C.border}`, marginTop: 12, paddingTop: 12 }}>
+                <div style={{ textAlign: "center" }}><div style={{ fontSize: 8, color: C.textSub }}>TARGET</div><div style={{ fontSize: 18, fontWeight: 800, color: C.textMid, fontFamily: C.syne }}>{confirmAction.kor.qtyTarget}</div></div>
+                <div style={{ textAlign: "center" }}><div style={{ fontSize: 8, color: C.textSub }}>AKTUAL</div><div style={{ fontSize: 18, fontWeight: 800, color: confirmAction.kor.tipe === "lebih" ? C.red : C.yellow, fontFamily: C.syne }}>{confirmAction.kor.qtyAktual}</div></div>
+                <div style={{ textAlign: "center" }}><div style={{ fontSize: 8, color: C.textSub }}>SELISIH</div><div style={{ fontSize: 18, fontWeight: 800, color: confirmAction.kor.selisih > 0 ? C.red : C.yellow, fontFamily: C.syne }}>{confirmAction.kor.selisih > 0 ? "+" : ""}{confirmAction.kor.selisih}</div></div>
               </div>
             </div>
 
-            {confirmAction.kor.alasan&&(
-              <div style={{padding:"8px 12px",background:`${C.yellow}08`,borderRadius:6,border:`1px solid ${C.yellow}22`,marginBottom:14}}>
-                <div style={{fontSize:8,color:C.yellow,fontFamily:C.sans,marginBottom:2}}>ALASAN KARYAWAN:</div>
-                <div style={{fontSize:10,color:C.text,fontFamily:C.sans}}>{confirmAction.kor.alasan}</div>
+            {confirmAction.kor.alasan && (
+              <div style={{ padding: "10px 14px", background: `${C.yellow}08`, borderRadius: 10, border: `1px solid ${C.yellow}22`, marginBottom: 20 }}>
+                <div style={{ fontSize: 9, color: C.yellow, fontWeight: 700, marginBottom: 4 }}>ALASAN KARYAWAN:</div>
+                <div style={{ fontSize: 11, color: C.text, lineHeight: 1.4 }}>{confirmAction.kor.alasan}</div>
               </div>
             )}
 
-            <div style={{padding:"10px 12px",background:confirmAction.action==="approve"?`${C.green}08`:`${C.red}08`,borderRadius:6,border:`1px solid ${confirmAction.action==="approve"?C.green:C.red}22`,marginBottom:14}}>
-              <div style={{fontSize:10,color:confirmAction.action==="approve"?C.green:C.red,fontFamily:C.sans,fontWeight:600}}>
-                {confirmAction.action==="approve"
-                  ?(confirmAction.kor.tipe==="lebih"
-                    ?`✓ QTY akan dihitung ${confirmAction.kor.qtyAktual} pcs. Upah dibayar sesuai ${confirmAction.kor.qtyAktual} pcs. Bundle UNBLOCK.`
-                    :`✓ QTY kurang (${confirmAction.kor.qtyAktual} pcs) diakui. Bundle lanjut ke tahap berikut.`)
-                  :`✗ QTY akan dikembalikan ke ${confirmAction.kor.qtyTarget} pcs. Kelebihan +${confirmAction.kor.selisih} pcs TIDAK dihitung upah. Bundle UNBLOCK.`}
+            <div style={{ padding: "14px 18px", background: confirmAction.action === "approve" ? `${C.green}08` : `${C.red}08`, borderRadius: 10, border: `1px solid ${confirmAction.action === "approve" ? C.green : C.red}22`, marginBottom: 24 }}>
+              <div style={{ fontSize: 11, color: confirmAction.action === "approve" ? C.green : C.red, fontWeight: 600, lineHeight: 1.4 }}>
+                {confirmAction.action === "approve"
+                  ? (confirmAction.kor.tipe === "lebih"
+                    ? `✓ Hasil produksi akan dicatat ${confirmAction.kor.qtyAktual} pcs. Upah dibayar penuh. Bundle dibuka otomatis.`
+                    : `✓ Kekurangan (${confirmAction.kor.qtyAktual} pcs) telah divalidasi. Bundle dapat dilanjutkan.`)
+                  : `✗ Kelebihan +${confirmAction.kor.selisih} pcs tidak dihitung. QTY dikembalikan ke ${confirmAction.kor.qtyTarget}. Upah dibayar ${confirmAction.kor.qtyTarget} pcs.`}
               </div>
             </div>
 
-            <div style={{marginBottom:14}}>
-              <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5}}>Kode Owner <span style={{color:C.red}}>*</span></div>
-              <div style={{display:"flex",gap:8}}>
-                <input type="password" value={authCode} onChange={e=>{setAuthCode(e.target.value);setAuthError(false);}} onKeyDown={e=>e.key==="Enter"&&handleAuth()}
-                  placeholder="Masukkan kode owner..."
-                  style={{flex:1,background:"#050e1f",border:`1px solid ${authError?C.red+"66":C.border2}`,borderRadius:6,padding:"8px 12px",fontSize:14,color:C.text,fontFamily:C.mono,outline:"none",textAlign:"center",letterSpacing:"0.3em"}}/>
-              </div>
-              {authError&&<div style={{fontSize:9,color:C.red,fontFamily:C.sans,marginTop:3}}>⚠ Kode owner salah.</div>}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ fontSize: 10, color: C.textSub, fontFamily: C.sans, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8, fontWeight: 700 }}>Otorisasi Owner <span style={{ color: C.red }}>*</span></div>
+              <input type="password" value={authCode} onChange={e => { setAuthCode(e.target.value); setAuthError(false); }} onKeyDown={e => e.key === "Enter" && handleAuth()}
+                placeholder="••••••"
+                style={{ width: "100%", background: "rgba(0,0,0,0.2)", border: `1px solid ${authError ? C.red : C.border2}`, borderRadius: 12, padding: "12px", fontSize: 20, color: C.text, fontFamily: C.mono, outline: "none", textAlign: "center", letterSpacing: "0.5em" }} />
+              {authError && <div style={{ fontSize: 10, color: C.red, fontFamily: C.sans, marginTop: 6, fontWeight: 600 }}>⚠ KODE OTORISASI SALAH</div>}
             </div>
 
-            <div style={{display:"flex",gap:8}}>
-              <BtnProd6 onClick={()=>{setConfirmAction(null);setAuthCode("");setAuthError(false);}} outline full>BATAL</BtnProd6>
-              <BtnProd6 onClick={handleAuth} color={confirmAction.action==="approve"?"green":"red"} full>{confirmAction.action==="approve"?"✓ APPROVE":"✗ REJECT"}</BtnProd6>
+            <div style={{ display: "flex", gap: 12 }}>
+              <button onClick={() => { setConfirmAction(null); setAuthCode(""); setAuthError(false); }}
+                style={{ flex: 1, padding: "12px", borderRadius: 12, background: "rgba(255,255,255,0.05)", border: `1px solid ${C.border}`, color: C.textSub, fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}
+                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.08)"}
+                onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}>BATAL</button>
+              <button onClick={handleAuth}
+                style={{ flex: 1, padding: "12px", borderRadius: 12, background: confirmAction.action === "approve" ? C.green : C.red, border: "none", color: "#000", fontWeight: 800, cursor: "pointer", transition: "all 0.2s", boxShadow: `0 8px 20px ${confirmAction.action === "approve" ? C.green : C.red}44` }}
+                onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
+                onMouseLeave={e => e.currentTarget.style.transform = "none"}>
+                {confirmAction.action === "approve" ? "✓ APPROVE" : "✗ REJECT"}
+              </button>
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 }
 
-
 // --- AUDIT LOG ---
-const AUDIT_DATA=[
-  {id:"A001",waktu:"2026-04-10 14:02",user:"EPUL",modul:"Produksi",aksi:"Scan Terima",detail:"Jahit — PO-0001 Airflow Navy XL, BDL-03, 5 pcs",severity:"info"},
-  {id:"A002",waktu:"2026-04-10 14:04",user:"EPUL",modul:"Produksi",aksi:"Scan Selesai",detail:"Jahit — PO-0001 Airflow Navy XL, BDL-03, QTY selesai: 5 pcs",severity:"success"},
-  {id:"A003",waktu:"2026-04-10 14:08",user:"ABQI",modul:"Produksi",aksi:"Scan Selesai",detail:"Cutting — PO-0004 Dravo Black M, BDL-01, QTY selesai: 8 pcs (target: 6, +2 OVERRIDE)",severity:"warning"},
-  {id:"A004",waktu:"2026-04-10 14:10",user:"Owner",modul:"Koreksi",aksi:"Override Approve",detail:"Cutting PO-0004 Dravo Black M BDL-01 — kelebihan +2 pcs disetujui Owner",severity:"warning"},
-  {id:"A005",waktu:"2026-04-10 14:12",user:"ABQI",modul:"Penggajian",aksi:"Kasbon Diajukan",detail:"Kasbon Rp 50.000 diajukan oleh ABQI",severity:"info"},
-  {id:"A006",waktu:"2026-04-10 14:15",user:"Owner",modul:"Penggajian",aksi:"Bayar Gaji",detail:"EPUL — Upah Bersih Rp 630.000, potong kasbon Rp 0, dibayar Rp 630.000",severity:"success"},
-  {id:"A007",waktu:"2026-04-10 14:18",user:"Owner",modul:"Produksi",aksi:"Scan Selesai",detail:"QC — PO-0001 Airflow Black XL, BDL-02, QTY: 5 pcs cleared",severity:"success"},
-  {id:"A008",waktu:"2026-04-10 14:20",user:"Owner",modul:"Pengiriman",aksi:"Surat Jalan Dibuat",detail:"SJ-001 — PO-0001 Elyon Store, 34 pcs, kurir: JNE",severity:"info"},
-  {id:"A009",waktu:"2026-04-10 14:25",user:"Owner",modul:"Master Data",aksi:"Tambah Data",detail:"Karyawan baru: RUDI — posisi Jahit",severity:"info"},
-  {id:"A010",waktu:"2026-04-10 14:30",user:"Owner",modul:"Produksi",aksi:"Input PO",detail:"PO-0008 dibuat — Klien: Elyon Store, Model: Zuno, 80 pcs",severity:"info"},
-  {id:"A011",waktu:"2026-04-09 09:15",user:"UJANG",modul:"Produksi",aksi:"Scan Selesai",detail:"Jahit — PO-0002 Neck Navy XXL, BDL-01, QTY selesai: 2 pcs (target: 3, -1 KURANG, alasan: Jahitan loncat)",severity:"error"},
-  {id:"A012",waktu:"2026-04-09 09:18",user:"UJANG",modul:"Produksi",aksi:"Reject Ditandai",detail:"Jahit — PO-0002 Neck Navy XXL, BDL-01 — Jahitan loncat, potong upah",severity:"error"},
-  {id:"A013",waktu:"2026-04-09 10:00",user:"Owner",modul:"Penggajian",aksi:"Bayar Gaji",detail:"UJANG — Upah Bersih Rp 357.000, potong kasbon Rp 100.000, dibayar Rp 257.000",severity:"success"},
-  {id:"A014",waktu:"2026-04-09 10:05",user:"BB",modul:"Produksi",aksi:"Scan Selesai",detail:"Buang Benang — PO-0001 Airflow Navy L, BDL-02, QTY: 3 pcs",severity:"success"},
-  {id:"A015",waktu:"2026-04-08 08:30",user:"Owner",modul:"Koreksi",aksi:"Override Reject",detail:"Cutting PO-0001 Airflow Black S BDL-05 — kelebihan +3 pcs DITOLAK oleh Owner",severity:"error"},
-  {id:"A016",waktu:"2026-04-08 11:00",user:"Owner",modul:"Pengiriman",aksi:"Surat Jalan Dibuat",detail:"SJ-002 — PO-0002 Elyon Store, 16 pcs, kurir: SiCepat",severity:"info"},
-  {id:"A017",waktu:"2026-04-08 13:00",user:"Packing",modul:"Produksi",aksi:"Scan Selesai",detail:"Packing — PO-0001 Airflow Black XL, BDL-01, QTY: 5 pcs",severity:"success"},
-  {id:"A018",waktu:"2026-04-07 09:00",user:"Owner",modul:"Master Data",aksi:"Edit Data",detail:"HPP Model Airflow — Upah Jahit diubah dari Rp 20.000 → Rp 22.000",severity:"info"},
-  {id:"A019",waktu:"2026-04-07 14:00",user:"QC",modul:"Produksi",aksi:"Reject Ditandai",detail:"QC — PO-0001 Airflow Black XXL, BDL-03 — Noda, bisa rework",severity:"warning"},
-  {id:"A020",waktu:"2026-04-06 16:00",user:"Owner",modul:"Sistem",aksi:"Login",detail:"Owner login dari 192.168.1.10",severity:"info"},
+const AUDIT_DATA = [
+  { id: "A001", waktu: "2026-04-10 14:02", user: "EPUL", modul: "Produksi", aksi: "Scan Terima", detail: "Jahit — PO-0001 Airflow Navy XL, BDL-03, 5 pcs", severity: "info" },
+  { id: "A002", waktu: "2026-04-10 14:04", user: "EPUL", modul: "Produksi", aksi: "Scan Selesai", detail: "Jahit — PO-0001 Airflow Navy XL, BDL-03, QTY selesai: 5 pcs", severity: "success" },
+  { id: "A003", waktu: "2026-04-10 14:08", user: "ABQI", modul: "Produksi", aksi: "Scan Selesai", detail: "Cutting — PO-0004 Dravo Black M, BDL-01, QTY selesai: 8 pcs (target: 6, +2 OVERRIDE)", severity: "warning" },
+  { id: "A004", waktu: "2026-04-10 14:10", user: "Owner", modul: "Koreksi", aksi: "Override Approve", detail: "Cutting PO-0004 Dravo Black M BDL-01 — kelebihan +2 pcs disetujui Owner", severity: "warning" },
+  { id: "A005", waktu: "2026-04-10 14:12", user: "ABQI", modul: "Penggajian", aksi: "Kasbon Diajukan", detail: "Kasbon Rp 50.000 diajukan oleh ABQI", severity: "info" },
+  { id: "A006", waktu: "2026-04-10 14:15", user: "Owner", modul: "Penggajian", aksi: "Bayar Gaji", detail: "EPUL — Upah Bersih Rp 630.000, potong kasbon Rp 0, dibayar Rp 630.000", severity: "success" },
+  { id: "A007", waktu: "2026-04-10 14:18", user: "Owner", modul: "Produksi", aksi: "Scan Selesai", detail: "QC — PO-0001 Airflow Black XL, BDL-02, QTY: 5 pcs cleared", severity: "success" },
+  { id: "A008", waktu: "2026-04-10 14:20", user: "Owner", modul: "Pengiriman", aksi: "Surat Jalan Dibuat", detail: "SJ-001 — PO-0001 Elyon Store, 34 pcs, kurir: JNE", severity: "info" },
+  { id: "A009", waktu: "2026-04-10 14:25", user: "Owner", modul: "Master Data", aksi: "Tambah Data", detail: "Karyawan baru: RUDI — posisi Jahit", severity: "info" },
+  { id: "A010", waktu: "2026-04-10 14:30", user: "Owner", modul: "Produksi", aksi: "Input PO", detail: "PO-0008 dibuat — Klien: Elyon Store, Model: Zuno, 80 pcs", severity: "info" },
+  { id: "A011", waktu: "2026-04-09 09:15", user: "UJANG", modul: "Produksi", aksi: "Scan Selesai", detail: "Jahit — PO-0002 Neck Navy XXL, BDL-01, QTY selesai: 2 pcs (target: 3, -1 KURANG, alasan: Jahitan loncat)", severity: "error" },
+  { id: "A012", waktu: "2026-04-09 09:18", user: "UJANG", modul: "Produksi", aksi: "Reject Ditandai", detail: "Jahit — PO-0002 Neck Navy XXL, BDL-01 — Jahitan loncat, potong upah", severity: "error" },
+  { id: "A013", waktu: "2026-04-09 10:00", user: "Owner", modul: "Penggajian", aksi: "Bayar Gaji", detail: "UJANG — Upah Bersih Rp 357.000, potong kasbon Rp 100.000, dibayar Rp 257.000", severity: "success" },
+  { id: "A014", waktu: "2026-04-09 10:05", user: "BB", modul: "Produksi", aksi: "Scan Selesai", detail: "Buang Benang — PO-0001 Airflow Navy L, BDL-02, QTY: 3 pcs", severity: "success" },
+  { id: "A015", waktu: "2026-04-08 08:30", user: "Owner", modul: "Koreksi", aksi: "Override Reject", detail: "Cutting PO-0001 Airflow Black S BDL-05 — kelebihan +3 pcs DITOLAK oleh Owner", severity: "error" },
+  { id: "A016", waktu: "2026-04-08 11:00", user: "Owner", modul: "Pengiriman", aksi: "Surat Jalan Dibuat", detail: "SJ-002 — PO-0002 Elyon Store, 16 pcs, kurir: SiCepat", severity: "info" },
+  { id: "A017", waktu: "2026-04-08 13:00", user: "Packing", modul: "Produksi", aksi: "Scan Selesai", detail: "Packing — PO-0001 Airflow Black XL, BDL-01, QTY: 5 pcs", severity: "success" },
+  { id: "A018", waktu: "2026-04-07 09:00", user: "Owner", modul: "Master Data", aksi: "Edit Data", detail: "HPP Model Airflow — Upah Jahit diubah dari Rp 20.000 → Rp 22.000", severity: "info" },
+  { id: "A019", waktu: "2026-04-07 14:00", user: "QC", modul: "Produksi", aksi: "Reject Ditandai", detail: "QC — PO-0001 Airflow Black XXL, BDL-03 — Noda, bisa rework", severity: "warning" },
+  { id: "A020", waktu: "2026-04-06 16:00", user: "Owner", modul: "Sistem", aksi: "Login", detail: "Owner login dari 192.168.1.10", severity: "info" },
 ];
 
-const MODUL_LIST_AL=["Semua","Produksi","Penggajian","Pengiriman","Koreksi","Master Data","Sistem"];
-const AKSI_LIST_AL=["Semua","Scan Terima","Scan Selesai","Reject Ditandai","Override Approve","Override Reject","Bayar Gaji","Kasbon Diajukan","Surat Jalan Dibuat","Input PO","Tambah Data","Edit Data","Login"];
-const USER_LIST_AL=["Semua","Owner","EPUL","ABQI","UJANG","BB","QC","Packing"];
+const MODUL_LIST_AL = ["Semua", "Produksi", "Penggajian", "Pengiriman", "Koreksi", "Master Data", "Sistem"];
+const AKSI_LIST_AL = ["Semua", "Scan Terima", "Scan Selesai", "Reject Ditandai", "Override Approve", "Override Reject", "Bayar Gaji", "Kasbon Diajukan", "Surat Jalan Dibuat", "Input PO", "Tambah Data", "Edit Data", "Login"];
+const USER_LIST_AL = ["Semua", "Owner", "EPUL", "ABQI", "UJANG", "BB", "QC", "Packing"];
 
 function AuditLog() {
-  const [filterModul,setFilterModul]=useState("Semua");
-  const [filterUser,setFilterUser]=useState("Semua");
-  const [filterAksi,setFilterAksi]=useState("Semua");
-  const [search,setSearch]=useState("");
+  const [filterModul, setFilterModul] = useState("Semua");
+  const [filterUser, setFilterUser] = useState("Semua");
+  const [filterAksi, setFilterAksi] = useState("Semua");
+  const [search, setSearch] = useState("");
 
-  const filtered=AUDIT_DATA.filter(a=>{
-    if(filterModul!=="Semua"&&a.modul!==filterModul) return false;
-    if(filterUser!=="Semua"&&a.user!==filterUser) return false;
-    if(filterAksi!=="Semua"&&a.aksi!==filterAksi) return false;
-    if(search.trim()&&!a.detail.toLowerCase().includes(search.trim().toLowerCase())&&!a.aksi.toLowerCase().includes(search.trim().toLowerCase())) return false;
+  const filtered = AUDIT_DATA.filter(a => {
+    if (filterModul !== "Semua" && a.modul !== filterModul) return false;
+    if (filterUser !== "Semua" && a.user !== filterUser) return false;
+    if (filterAksi !== "Semua" && a.aksi !== filterAksi) return false;
+    if (search.trim() && !a.detail.toLowerCase().includes(search.trim().toLowerCase()) && !a.aksi.toLowerCase().includes(search.trim().toLowerCase())) return false;
     return true;
   });
 
-  const sevColor={info:C.blue,success:C.green,warning:C.yellow,error:C.red};
-  const sevIcon={info:"ℹ",success:"✓",warning:"⚠",error:"✗"};
+  const sevColor = { info: C.blue, success: C.green, warning: C.yellow, error: C.red };
+  const sevIcon = { info: "ℹ", success: "✓", warning: "⚠", error: "✗" };
 
-  const countBySeverity={info:0,success:0,warning:0,error:0};
-  AUDIT_DATA.forEach(a=>{countBySeverity[a.severity]++;});
-  const countByModul={};
-  AUDIT_DATA.forEach(a=>{countByModul[a.modul]=(countByModul[a.modul]||0)+1;});
+  const countBySeverity = { info: 0, success: 0, warning: 0, error: 0 };
+  AUDIT_DATA.forEach(a => { countBySeverity[a.severity]++; });
+  const countByModul = {};
+  AUDIT_DATA.forEach(a => { countByModul[a.modul] = (countByModul[a.modul] || 0) + 1; });
 
-  const THL={padding:"8px 12px",textAlign:"left",fontSize:9,fontWeight:700,color:C.textSub,textTransform:"uppercase",letterSpacing:"0.06em",fontFamily:C.sans,whiteSpace:"nowrap"};
-  const TDL=(i)=>({padding:"10px 12px",fontSize:11,color:C.text,fontFamily:C.sans,background:i%2===0?C.card:C.card2});
-  const selectStyle={background:"#050e1f",border:`1px solid ${C.border2}`,borderRadius:6,padding:"6px 10px",fontSize:10,color:C.text,fontFamily:C.sans,outline:"none"};
+  const THL = { padding: "12px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, color: C.textSub, textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: C.sans, borderBottom: `1px solid ${C.border}` };
+  const TDL = (i) => ({ padding: "14px 16px", fontSize: 13, color: C.text, fontFamily: C.sans, background: i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent", borderBottom: `1px solid ${C.border}` });
+  const selectStyle = { background: "rgba(0,0,0,0.3)", border: `1px solid ${C.border}`, borderRadius: 10, padding: "8px 14px", fontSize: 12, color: C.text, fontFamily: C.sans, outline: "none", transition: "all 0.2s" };
 
   return (
     <div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,marginBottom:20}}>
-        <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 16px",borderLeft:`3px solid ${C.cyan}`}}>
-          <div style={{fontSize:8,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:3}}>Total Log</div>
-          <div style={{fontSize:20,fontWeight:800,color:C.cyan,fontFamily:C.syne}}>{AUDIT_DATA.length}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 16, marginBottom: 24 }}>
+        <div style={{ background: C.card, backdropFilter: "blur(10px)", border: `1px solid ${C.border}`, borderRadius: 16, padding: "20px", borderLeft: `4px solid ${C.cyan}`, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
+          <div style={{ fontSize: 9, color: C.textSub, fontFamily: C.sans, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6, fontWeight: 700 }}>Total Entri Log</div>
+          <div style={{ fontSize: 28, fontWeight: 800, color: C.cyan, fontFamily: C.syne, letterSpacing: "-0.02em" }}>{AUDIT_DATA.length}</div>
         </div>
-        {[{label:"Info",sev:"info"},{label:"Sukses",sev:"success"},{label:"Warning",sev:"warning"},{label:"Error",sev:"error"}].map(k=>(
-          <div key={k.sev} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 16px",borderLeft:`3px solid ${sevColor[k.sev]}`}}>
-            <div style={{fontSize:8,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:3}}>{k.label}</div>
-            <div style={{fontSize:20,fontWeight:800,color:sevColor[k.sev],fontFamily:C.syne}}>{countBySeverity[k.sev]}</div>
+        {[{ label: "Info", sev: "info" }, { label: "Success", sev: "success" }, { label: "Warning", sev: "warning" }, { label: "Error", sev: "error" }].map(k => (
+          <div key={k.sev} style={{ background: C.card, backdropFilter: "blur(10px)", border: `1px solid ${C.border}`, borderRadius: 16, padding: "20px", borderLeft: `4px solid ${sevColor[k.sev]}`, transition: "all 0.2s" }}>
+            <div style={{ fontSize: 9, color: C.textSub, fontFamily: C.sans, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6, fontWeight: 700 }}>{k.label}</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: sevColor[k.sev], fontFamily: C.syne }}>{countBySeverity[k.sev]}</div>
           </div>
         ))}
       </div>
 
-      <Panel title="FILTER LOG" accent={C.textSub}>
-        <div style={{padding:"12px 18px",display:"flex",gap:14,flexWrap:"wrap",alignItems:"flex-end"}}>
+      <Panel title="AUDIT LOG EXPLORER" accent={C.textSub}>
+        <div style={{ padding: "16px 24px", display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-end", borderBottom: `1px solid ${C.border}` }}>
           <div>
-            <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4}}>Modul</div>
-            <select value={filterModul} onChange={e=>setFilterModul(e.target.value)} style={selectStyle}>
-              {MODUL_LIST_AL.map(m=><option key={m} value={m}>{m}</option>)}
+            <div style={{ fontSize: 9, color: C.textSub, fontFamily: C.sans, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6, fontWeight: 700 }}>Modul</div>
+            <select value={filterModul} onChange={e => setFilterModul(e.target.value)} style={selectStyle}>
+              {MODUL_LIST_AL.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
           <div>
-            <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4}}>User</div>
-            <select value={filterUser} onChange={e=>setFilterUser(e.target.value)} style={selectStyle}>
-              {USER_LIST_AL.map(u=><option key={u} value={u}>{u}</option>)}
+            <div style={{ fontSize: 9, color: C.textSub, fontFamily: C.sans, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6, fontWeight: 700 }}>User</div>
+            <select value={filterUser} onChange={e => setFilterUser(e.target.value)} style={selectStyle}>
+              {USER_LIST_AL.map(u => <option key={u} value={u}>{u}</option>)}
             </select>
           </div>
           <div>
-            <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4}}>Aksi</div>
-            <select value={filterAksi} onChange={e=>setFilterAksi(e.target.value)} style={selectStyle}>
-              {AKSI_LIST_AL.map(a=><option key={a} value={a}>{a}</option>)}
+            <div style={{ fontSize: 9, color: C.textSub, fontFamily: C.sans, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6, fontWeight: 700 }}>Aksi</div>
+            <select value={filterAksi} onChange={e => setFilterAksi(e.target.value)} style={selectStyle}>
+              {AKSI_LIST_AL.map(a => <option key={a} value={a}>{a}</option>)}
             </select>
           </div>
-          <div style={{flex:1,minWidth:200}}>
-            <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4}}>Cari Detail</div>
-            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Ketik untuk mencari..."
-              style={{...selectStyle,width:"100%"}}/>
+          <div style={{ flex: 1, minWidth: 240 }}>
+            <div style={{ fontSize: 9, color: C.textSub, fontFamily: C.sans, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6, fontWeight: 700 }}>Cari Aktivitas</div>
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tulis aksi atau detail..."
+              style={{ ...selectStyle, width: "100%" }} />
           </div>
-          {(filterModul!=="Semua"||filterUser!=="Semua"||filterAksi!=="Semua"||search.trim())&&(
-            <button onClick={()=>{setFilterModul("Semua");setFilterUser("Semua");setFilterAksi("Semua");setSearch("");}}
-              style={{padding:"6px 14px",fontSize:9,fontWeight:700,fontFamily:C.mono,background:`${C.red}15`,color:C.red,border:`1px solid ${C.red}33`,borderRadius:6,cursor:"pointer"}}>
+          {(filterModul !== "Semua" || filterUser !== "Semua" || filterAksi !== "Semua" || search.trim()) && (
+            <button onClick={() => { setFilterModul("Semua"); setFilterUser("Semua"); setFilterAksi("Semua"); setSearch(""); }}
+              style={{ padding: "10px 18px", fontSize: 10, fontWeight: 800, fontFamily: C.mono, background: "rgba(248, 113, 113, 0.1)", color: C.red, border: `1px solid ${C.red}44`, borderRadius: 10, cursor: "pointer", transition: "all 0.2s" }}>
               ✗ RESET FILTER
             </button>
           )}
         </div>
-      </Panel>
 
-      <Panel title={`RIWAYAT AKTIVITAS — ${filtered.length} dari ${AUDIT_DATA.length} entri`} accent={C.textSub}>
-        <div style={{overflowX:"auto"}}>
-          <table style={{width:"100%",borderCollapse:"collapse",minWidth:820}}>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
             <thead>
-              <tr style={{background:"#0e204055"}}>
-                {["","Waktu","User","Modul","Aksi","Detail"].map(h=>(
+              <tr style={{ background: "rgba(255,255,255,0.02)" }}>
+                {["", "TIMESTAMP", "ACTOR", "MODULE", "ACTION", "DETAIL"].map(h => (
                   <th key={h} style={THL}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {filtered.length===0?(
-                <tr><td colSpan={6} style={{padding:"40px",textAlign:"center",color:C.textMid,fontFamily:C.sans,fontSize:12}}>Tidak ada log yang sesuai filter.</td></tr>
-              ):filtered.map((a,i)=>{
-                const sc=sevColor[a.severity];
+              {filtered.length === 0 ? (
+                <tr><td colSpan={6} style={{ padding: "60px", textAlign: "center", color: C.textMid, fontFamily: C.sans, fontSize: 13, opacity: 0.6 }}>Tidak ada log yang ditemukan dalam kriteria filter ini.</td></tr>
+              ) : filtered.map((a, i) => {
+                const sc = sevColor[a.severity];
                 return (
-                  <tr key={a.id} style={{borderBottom:`1px solid ${C.border}`,background:a.severity==="error"?`${C.red}06`:a.severity==="warning"?`${C.yellow}04`:i%2===0?C.card:C.card2}}>
-                    <td style={{...TDL(i),textAlign:"center",width:28}}>
-                      <span style={{fontSize:11,color:sc,fontWeight:800}}>{sevIcon[a.severity]}</span>
+                  <tr key={a.id} style={{
+                    transition: "all 0.1s",
+                    background: a.severity === "error" ? "rgba(248, 113, 113, 0.05)" : "transparent"
+                  }}>
+                    <td style={{ ...TDL(i), textAlign: "center", width: 40 }}>
+                      <span style={{ fontSize: 14, color: sc, fontWeight: 900 }}>{sevIcon[a.severity]}</span>
                     </td>
-                    <td style={{...TDL(i),whiteSpace:"nowrap"}}>
-                      <span style={{fontFamily:C.mono,fontSize:10,color:C.textSub}}>{a.waktu}</span>
+                    <td style={{ ...TDL(i), whiteSpace: "nowrap" }}>
+                      <span style={{ fontFamily: C.mono, fontSize: 11, color: C.textSub, fontWeight: 500 }}>{a.waktu}</span>
                     </td>
                     <td style={TDL(i)}>
-                      <span style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:99,fontFamily:C.mono,
-                        background:a.user==="Owner"?`${C.cyan}15`:`${C.purple}15`,
-                        color:a.user==="Owner"?C.cyan:C.purple,
-                        border:`1px solid ${a.user==="Owner"?C.cyan+"33":C.purple+"33"}`}}>
+                      <span style={{
+                        fontSize: 10, fontWeight: 800, padding: "4px 10px", borderRadius: 8, fontFamily: C.mono,
+                        background: a.user === "Owner" ? "rgba(34, 211, 238, 0.1)" : "rgba(167, 139, 250, 0.1)",
+                        color: a.user === "Owner" ? C.cyan : C.purple,
+                        border: `1px solid ${a.user === "Owner" ? C.cyan + "22" : C.purple + "22"}`
+                      }}>
                         {a.user}
                       </span>
                     </td>
                     <td style={TDL(i)}>
-                      <span style={{fontSize:9,fontWeight:700,padding:"2px 8px",borderRadius:99,fontFamily:C.mono,
-                        background:a.modul==="Produksi"?`${C.green}15`:a.modul==="Penggajian"?`${C.purple}15`:a.modul==="Pengiriman"?`${C.blue}15`:a.modul==="Koreksi"?`${C.red}15`:a.modul==="Master Data"?`${C.orange}15`:`${C.textSub}15`,
-                        color:a.modul==="Produksi"?C.green:a.modul==="Penggajian"?C.purple:a.modul==="Pengiriman"?C.blue:a.modul==="Koreksi"?C.red:a.modul==="Master Data"?C.orange:C.textSub}}>
+                      <span style={{
+                        fontSize: 9, fontWeight: 800, padding: "4px 10px", borderRadius: 8, fontFamily: C.mono, textTransform: "uppercase",
+                        background: "rgba(255,255,255,0.05)",
+                        color: C.textSub,
+                        border: "1px solid rgba(255,255,255,0.1)"
+                      }}>
                         {a.modul}
                       </span>
                     </td>
-                    <td style={{...TDL(i),whiteSpace:"nowrap"}}>
-                      <span style={{fontSize:10,fontWeight:600,color:sc,fontFamily:C.sans}}>{a.aksi}</span>
+                    <td style={{ ...TDL(i), whiteSpace: "nowrap" }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: sc, fontFamily: C.sans }}>{a.aksi}</span>
                     </td>
                     <td style={TDL(i)}>
-                      <span style={{fontSize:10,color:C.text,fontFamily:C.sans,lineHeight:1.4}}>{a.detail}</span>
+                      <span style={{ fontSize: 12, color: C.text, fontFamily: C.sans, lineHeight: 1.5, opacity: 0.9 }}>{a.detail}</span>
                     </td>
                   </tr>
                 );
@@ -8446,144 +8605,221 @@ function AuditLog() {
             </tbody>
           </table>
         </div>
-        <div style={{padding:"10px 18px",borderTop:`1px solid ${C.border}`,display:"flex",gap:16,flexWrap:"wrap"}}>
-          {Object.entries(countByModul).map(([m,c])=>(
-            <span key={m} style={{fontSize:9,color:C.textSub,fontFamily:C.mono}}>{m}: <strong style={{color:C.text}}>{c}</strong></span>
-          ))}
-        </div>
       </Panel>
-
-      <div style={{padding:"9px 13px",background:C.card2,borderRadius:8,border:`1px solid ${C.border}`,fontSize:9,color:C.textMid,fontFamily:C.sans,lineHeight:1.7}}>
-        ◱ Audit Log bersifat <strong style={{color:C.text}}>read-only</strong>. Semua aktivitas pengguna dicatat otomatis oleh sistem. Log tidak dapat diedit atau dihapus.
-      </div>
     </div>
   );
 }
 
+// --- MAIN APP ---
 export default function StitchlixApp() {
-  const [activeNav,setActiveNav]=useState("dashboard");
-  const [activeSub,setActiveSub]=useState("Produksi");
-  const [openNav,setOpenNav]=useState("dashboard");
-  const curNav=NAV.find(n=>n.id===activeNav);
-  const [sharedBundleDB,setSharedBundleDB]=useState(()=>JSON.parse(JSON.stringify(initBundleDB)));
-  const [koreksiQueue,setKoreksiQueue]=useState(()=>[...initKoreksiQueue]);
-  const [inventory,setInventory]=useState(initInventory);
-  const [trxKeluar,setTrxKeluar]=useState(initTrxKeluar);
-  const [trxMasuk,setTrxMasuk]=useState(initTrxMasuk);
-  const [jurnal,setJurnal]=useState(initJurnal);
+  const [activeNav, setActiveNav] = useState("dashboard");
+  const [activeSub, setActiveSub] = useState("Produksi");
+  const [openNav, setOpenNav] = useState("dashboard");
+  const curNav = NAV.find(n => n.id === activeNav);
+  const [sharedBundleDB, setSharedBundleDB] = useState(() => JSON.parse(JSON.stringify(initBundleDB)));
+  const [koreksiQueue, setKoreksiQueue] = useState(() => [...initKoreksiQueue]);
+  const [inventory, setInventory] = useState(initInventory);
+  const [trxKeluar, setTrxKeluar] = useState(initTrxKeluar);
+  const [trxMasuk, setTrxMasuk] = useState(initTrxMasuk);
+  const [jurnal, setJurnal] = useState(initJurnal);
 
-  function navTo(navId,subLabel) {
+  function navTo(navId, subLabel) {
     setActiveNav(navId);
     setOpenNav(navId);
     setActiveSub(subLabel);
   }
 
   function renderContent() {
-
-    if(activeNav==="keuangan"){
-      if(activeSub==="Ringkasan")      return <TabKeuangan key="k_ringkas" defaultTab="ringkasan"      jurnal={jurnal} setJurnal={setJurnal} inventory={inventory} setInventory={setInventory} trxMasuk={trxMasuk} setTrxMasuk={setTrxMasuk}/>;
-      if(activeSub==="Laporan PO")     return <TabKeuangan key="k_po"      defaultTab="laporan_po"     jurnal={jurnal} setJurnal={setJurnal} inventory={inventory} setInventory={setInventory} trxMasuk={trxMasuk} setTrxMasuk={setTrxMasuk}/>;
-      if(activeSub==="Laporan Margin") return <TabKeuangan key="k_margin"  defaultTab="laporan_margin" jurnal={jurnal} setJurnal={setJurnal} inventory={inventory} setInventory={setInventory} trxMasuk={trxMasuk} setTrxMasuk={setTrxMasuk}/>;
-      if(activeSub==="Jurnal Umum")    return <TabKeuangan key="k_jurnal"  defaultTab="jurnal"         jurnal={jurnal} setJurnal={setJurnal} inventory={inventory} setInventory={setInventory} trxMasuk={trxMasuk} setTrxMasuk={setTrxMasuk}/>;
+    if (activeNav === "keuangan") {
+      if (activeSub === "Ringkasan")      return <TabKeuangan key="k_ringkas" defaultTab="ringkasan" jurnal={jurnal} setJurnal={setJurnal} inventory={inventory} setInventory={setInventory} trxMasuk={trxMasuk} setTrxMasuk={setTrxMasuk} />;
+      if (activeSub === "Laporan PO")     return <TabKeuangan key="k_po" defaultTab="laporan_po" jurnal={jurnal} setJurnal={setJurnal} inventory={inventory} setInventory={setInventory} trxMasuk={trxMasuk} setTrxMasuk={setTrxMasuk} />;
+      if (activeSub === "Laporan Margin") return <TabKeuangan key="k_margin" defaultTab="laporan_margin" jurnal={jurnal} setJurnal={setJurnal} inventory={inventory} setInventory={setInventory} trxMasuk={trxMasuk} setTrxMasuk={setTrxMasuk} />;
+      if (activeSub === "Jurnal Umum")    return <TabKeuangan key="k_jurnal" defaultTab="jurnal" jurnal={jurnal} setJurnal={setJurnal} inventory={inventory} setInventory={setInventory} trxMasuk={trxMasuk} setTrxMasuk={setTrxMasuk} />;
     }
 
-    if(activeNav==="master"){
-      if(activeSub==="Master Detail") return <MasterDetail/>;
-      if(activeSub==="Produk & HPP") return <MasterProduk/>;
-      if(activeSub==="Karyawan") return <MasterKaryawan/>;
-      if(activeSub==="Klien") return <MasterKlien/>;
-      if(activeSub==="Jenis Reject") return <MasterLainnya key="m4" defaultTab="reject"/>;
-      if(activeSub==="Kategori Transaksi") return <MasterLainnya key="m5" defaultTab="trx"/>;
-      if(activeSub==="Satuan (UOM)") return <MasterLainnya key="m6" defaultTab="satuan"/>;
-      if(activeSub==="User & Role") return <MasterLainnya key="m7" defaultTab="user"/>;
-
+    if (activeNav === "master") {
+      if (activeSub === "Master Detail") return <MasterDetail />;
+      if (activeSub === "Produk & HPP") return <MasterProduk />;
+      if (activeSub === "Karyawan") return <MasterKaryawan />;
+      if (activeSub === "Klien") return <MasterKlien />;
+      if (activeSub === "Jenis Reject") return <MasterLainnya key="m4" defaultTab="reject" />;
+      if (activeSub === "Kategori Transaksi") return <MasterLainnya key="m5" defaultTab="trx" />;
+      if (activeSub === "Satuan (UOM)") return <MasterLainnya key="m6" defaultTab="satuan" />;
+      if (activeSub === "User & Role") return <MasterLainnya key="m7" defaultTab="user" />;
     }
 
-    if(activeNav==="pengiriman"){
-      if(activeSub==="Buat Surat Jalan") return <TabPengiriman defaultTab="buat"/>;
-      if(activeSub==="Riwayat Kirim") return <TabPengiriman defaultTab="riwayat"/>;
-    }
-    
-    if(activeNav==="penggajian"){
-      if(activeSub==="Rekap Gaji") return <TabPenggajian key="p_rekap" defaultTab="rekap"/>;
-      if(activeSub==="Kasbon")     return <TabPenggajian key="p_kasbon" defaultTab="kasbon"/>;
-      if(activeSub==="Slip Gaji")  return <TabPenggajian key="p_slip" defaultTab="slip"/>;
-    }
-    
-    
-    if(activeNav==="inventory"){
-      if(activeSub==="Overview Stok") return <TabInventory key="i_overview" defaultTab="overview" inventory={inventory} setInventory={setInventory} trxKeluar={trxKeluar} setTrxKeluar={setTrxKeluar} trxMasuk={trxMasuk} setTrxMasuk={setTrxMasuk}/>;
-      if(activeSub==="Transaksi Keluar") return <TabInventory key="i_keluar" defaultTab="keluar" inventory={inventory} setInventory={setInventory} trxKeluar={trxKeluar} setTrxKeluar={setTrxKeluar} trxMasuk={trxMasuk} setTrxMasuk={setTrxMasuk}/>;
-      if(activeSub==="Alert Order") return <TabInventory key="i_alert" defaultTab="alert" inventory={inventory} setInventory={setInventory} trxKeluar={trxKeluar} setTrxKeluar={setTrxKeluar} trxMasuk={trxMasuk} setTrxMasuk={setTrxMasuk}/>;
-    }
-if(activeNav==="laporan"){
-      if(activeSub==="Budget vs Realisasi") return <TabLaporan key="l_bulan" defaultTab="per_bulan"/>;
-      if(activeSub==="Laporan PO") return <TabLaporan key="l_po" defaultTab="per_po"/>;
-      if(activeSub==="Laporan Gaji") return <TabLaporan key="l_gaji" defaultTab="laporan_gaji"/>;
-      if(activeSub==="Laporan Reject") return <TabLaporan key="l_reject" defaultTab="laporan_reject"/>;
-    }
-    
-    if(activeNav==="produksi"){
-      if(activeSub==="Input PO") return <InputPO/>;
-      if(activeSub==="Cutting") return <TabProduksi key="cutting" defaultTab="cutting" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue}/>;
-      if(activeSub==="Jahit") return <TabProduksi key="jahit" defaultTab="jahit" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue}/>;
-      if(activeSub==="Lubang Kancing") return <TabProduksi key="lkancing" defaultTab="lkancing" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue}/>;
-      if(activeSub==="Buang Benang") return <TabProduksi key="bbenang" defaultTab="bbenang" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue}/>;
-      if(activeSub==="QC") return <TabProduksi key="qc" defaultTab="qc" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue}/>;
-      if(activeSub==="Steam") return <TabProduksi key="steam" defaultTab="steam" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue}/>;
-      if(activeSub==="Packing") return <TabProduksi key="packing" defaultTab="packing" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue}/>;
-      if(activeSub==="Monitoring") return <TabProduksi key="monitoring" defaultTab="monitoring" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue}/>;
-    }
-    if(activeNav==="koreksi"){
-      return <TabKoreksi koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB}/>;
+    if (activeNav === "pengiriman") {
+      if (activeSub === "Buat Surat Jalan") return <TabPengiriman defaultTab="buat" />;
+      if (activeSub === "Riwayat Kirim") return <TabPengiriman defaultTab="riwayat" />;
     }
 
-    if(activeNav==="auditlog"){
-      return <AuditLog/>;
+    if (activeNav === "penggajian") {
+      if (activeSub === "Rekap Gaji") return <TabPenggajian key="p_rekap" defaultTab="rekap" />;
+      if (activeSub === "Kasbon")     return <TabPenggajian key="p_kasbon" defaultTab="kasbon" />;
+      if (activeSub === "Slip Gaji")  return <TabPenggajian key="p_slip" defaultTab="slip" />;
     }
 
-    if(activeNav==="dashboard"){
-      if(activeSub==="Produksi")   return <DashProduksi onNavTo={navTo}/>;
-
-      if(activeSub==="Keuangan")   return <DashKeuangan/>;
-      if(activeSub==="Penggajian") return <DashPenggajian/>;
+    if (activeNav === "inventory") {
+      if (activeSub === "Overview Stok") return <TabInventory key="i_overview" defaultTab="overview" inventory={inventory} setInventory={setInventory} trxKeluar={trxKeluar} setTrxKeluar={setTrxKeluar} trxMasuk={trxMasuk} setTrxMasuk={setTrxMasuk} />;
+      if (activeSub === "Transaksi Keluar") return <TabInventory key="i_keluar" defaultTab="keluar" inventory={inventory} setInventory={setInventory} trxKeluar={trxKeluar} setTrxKeluar={setTrxKeluar} trxMasuk={trxMasuk} setTrxMasuk={setTrxMasuk} />;
+      if (activeSub === "Alert Order") return <TabInventory key="i_alert" defaultTab="alert" inventory={inventory} setInventory={setInventory} trxKeluar={trxKeluar} setTrxKeluar={setTrxKeluar} trxMasuk={trxMasuk} setTrxMasuk={setTrxMasuk} />;
     }
-    return <Placeholder label={activeSub||curNav?.label}/>;
+
+    if (activeNav === "laporan") {
+      if (activeSub === "Budget vs Realisasi") return <TabLaporan key="l_bulan" defaultTab="per_bulan" />;
+      if (activeSub === "Laporan PO") return <TabLaporan key="l_po" defaultTab="per_po" />;
+      if (activeSub === "Laporan Gaji") return <TabLaporan key="l_gaji" defaultTab="laporan_gaji" />;
+      if (activeSub === "Laporan Reject") return <TabLaporan key="l_reject" defaultTab="laporan_reject" />;
+      if (activeSub === "Keuangan") return <TabLaporan key="l_keu" defaultTab="keuangan" />;
+    }
+
+    if (activeNav === "produksi") {
+      if (activeSub === "Input PO") return <InputPO />;
+      if (activeSub === "Cutting") return <TabProduksi key="cutting" defaultTab="cutting" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} />;
+      if (activeSub === "Jahit") return <TabProduksi key="jahit" defaultTab="jahit" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} />;
+      if (activeSub === "Lubang Kancing") return <TabProduksi key="lkancing" defaultTab="lkancing" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} />;
+      if (activeSub === "Buang Benang") return <TabProduksi key="bbenang" defaultTab="bbenang" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} />;
+      if (activeSub === "QC") return <TabProduksi key="qc" defaultTab="qc" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} />;
+      if (activeSub === "Steam") return <TabProduksi key="steam" defaultTab="steam" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} />;
+      if (activeSub === "Packing") return <TabProduksi key="packing" defaultTab="packing" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} />;
+      if (activeSub === "Monitoring") return <TabProduksi key="monitoring" defaultTab="monitoring" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} />;
+    }
+
+    if (activeNav === "koreksi") {
+      return <TabKoreksi koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} />;
+    }
+
+    if (activeNav === "auditlog") {
+      return <AuditLog />;
+    }
+
+    if (activeNav === "dashboard") {
+      if (activeSub === "Produksi")   return <DashProduksi onNavTo={navTo} />;
+      if (activeSub === "Keuangan")   return <DashKeuangan />;
+      if (activeSub === "Penggajian") return <DashPenggajian />;
+    }
+
+    return <Placeholder label={activeSub || curNav?.label} />;
   }
 
   return (
-    <div style={{display:"flex",height:"100vh",background:C.bg,color:C.text,overflow:"hidden",fontFamily:C.sans}}>
-      <div style={{width:238,background:C.sidebar,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",flexShrink:0}}>
-        <div style={{padding:"20px 18px 16px",borderBottom:`1px solid ${C.border}`}}>
-          <div style={{fontSize:14,fontWeight:800,color:"#fff",fontFamily:C.syne,letterSpacing:"-0.02em",lineHeight:1.2}}>
-            STITCHLYX<span style={{color:C.cyan,fontWeight:700,fontSize:12}}>.SYNCORE</span>
+    <div style={{
+      display: "flex",
+      height: "100vh",
+      background: C.bg,
+      color: C.text,
+      overflow: "hidden",
+      fontFamily: C.sans,
+      position: "relative"
+    }}>
+      <PremiumBackground />
+      
+      {/* Sidebar */}
+      <div style={{
+        width: 280,
+        background: "rgba(6, 13, 31, 0.45)",
+        backdropFilter: "blur(50px)",
+        borderRight: `1px solid rgba(255,255,255,0.08)`,
+        display: "flex",
+        flexDirection: "column",
+        flexShrink: 0,
+        zIndex: 100,
+        boxShadow: "20px 0 50px rgba(0,0,0,0.3)",
+        userSelect: "none"
+      }}>
+        <div style={{ padding: "40px 16px 32px", userSelect: "none", cursor: "default" }}>
+          <div style={{ 
+            fontSize: 18, 
+            fontWeight: 800, 
+            color: "#fff", 
+            fontFamily: C.syne, 
+            letterSpacing: "-0.04em", 
+            lineHeight: 1,
+            display: "flex",
+            alignItems: "center",
+            gap: 10
+          }}>
+            <div style={{ 
+              width: 30, height: 30, borderRadius: 10, 
+              background: `linear-gradient(135deg, ${C.cyan}, ${C.blue})`, 
+              display: "flex", alignItems: "center", justifyContent: "center", 
+              fontSize: 14, border: "1px solid rgba(255,255,255,0.2)",
+              boxShadow: `0 0 20px ${C.cyan}44`
+            }}>S</div>
+            STITCHLYX<span style={{ color: C.cyan, opacity: 0.8 }}>.SYNCORE</span>
           </div>
-          <div style={{fontSize:8,color:C.cyanDim,marginTop:5,letterSpacing:"0.2em",textTransform:"uppercase",fontFamily:C.mono}}>GARMENT OS // v1.0.0</div>
-          <div style={{display:"flex",alignItems:"center",gap:6,marginTop:8}}>
-            <div style={{width:6,height:6,borderRadius:"50%",background:C.green,boxShadow:`0 0 6px ${C.green}`}}/>
-            <span style={{fontSize:9,color:C.textSub,fontFamily:C.sans}}>All systems operational</span>
+          <div style={{ fontSize: 8, color: C.cyan, opacity: 0.5, marginTop: 10, letterSpacing: "0.4em", textTransform: "uppercase", fontFamily: C.mono, fontWeight: 700 }}>GARMENT OS // v1.0</div>
+          
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 24, padding: "8px 14px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12 }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.green, boxShadow: `0 0 15px ${C.green}` }} />
+            <span style={{ fontSize: 9, color: C.textSub, fontFamily: C.mono, fontWeight: 700, letterSpacing: "0.05em" }}>SERVER: OPERATIONAL</span>
           </div>
         </div>
-        <nav style={{flex:1,overflowY:"auto",padding:"8px 8px"}}>
-          {NAV.map(n=>{
-            const isActive=activeNav===n.id,isOpen=openNav===n.id;
+
+        
+        <nav style={{ flex: 1, overflowY: "auto", padding: "16px 16px", scrollbarWidth: "none" }}>
+          {NAV.map(n => {
+            const isActive = activeNav === n.id, isOpen = openNav === n.id;
             return (
-              <div key={n.id}>
-                <div onClick={()=>{setActiveNav(n.id);setOpenNav(isOpen&&n.subs.length?null:n.id);if(n.subs.length)setActiveSub(n.subs[0].label);else setActiveSub(n.label);}}
-                  style={{display:"flex",alignItems:"center",gap:10,padding:"9px 10px",borderRadius:8,cursor:"pointer",marginBottom:1,background:isActive?C.cyanBg:"transparent",border:`1px solid ${isActive?C.cyanDim:"transparent"}`,transition:"all 0.12s"}}
-                  onMouseEnter={e=>{if(!isActive)e.currentTarget.style.background=C.card;}}
-                  onMouseLeave={e=>{if(!isActive)e.currentTarget.style.background="transparent";}}>
-                  <div style={{width:28,height:28,borderRadius:7,flexShrink:0,background:isActive?`${n.color}18`:C.card,border:`1px solid ${isActive?n.color+"33":C.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:isActive?n.color:C.textSub}}>{n.icon}</div>
-                  <span style={{fontSize:12,fontWeight:isActive?600:400,color:isActive?"#fff":C.textSub,flex:1}}>{n.label}</span>
-                  {n.subs.length>0&&<span style={{fontSize:9,color:C.textMid}}>{isOpen?"▾":"▸"}</span>}
+              <div key={n.id} style={{ marginBottom: 6 }}>
+                <div onClick={() => { setActiveNav(n.id); setOpenNav(isOpen && n.subs.length ? null : n.id); if (n.subs.length) setActiveSub(n.subs[0].label); else setActiveSub(n.label); }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 16,
+                    padding: "12px 16px",
+                    borderRadius: 16,
+                    cursor: "pointer",
+                    background: isActive ? `linear-gradient(90deg, ${n.color}22 0%, transparent 100%)` : "transparent",
+                    border: `1px solid ${isActive ? n.color + "33" : "transparent"}`,
+                    transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+                    transform: isActive ? "translateX(6px)" : "none",
+                    position: "relative"
+                  }}
+                  onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.transform = "translateX(6px)"; } }}
+                  onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.transform = "none"; } }}>
+
+                  <div style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 12,
+                    flexShrink: 0,
+                    background: isActive ? n.color : "rgba(255,255,255,0.03)",
+                    border: `1px solid ${isActive ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.06)"}`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 16,
+                    color: isActive ? "#000" : C.textSub,
+                    boxShadow: isActive ? `0 8px 20px ${n.color}33` : "none",
+                    transition: "all 0.4s"
+                  }}>{n.icon}</div>
+                  <span style={{ 
+                    fontSize: 14, 
+                    fontWeight: isActive ? 700 : 500, 
+                    color: isActive ? "#fff" : C.textSub, 
+                    flex: 1,
+                    letterSpacing: isActive ? "0.02em" : "0"
+                  }}>{n.label}</span>
+                  {n.subs.length > 0 && <span style={{ fontSize: 10, color: C.textMid, transition: "transform 0.3s", transform: isOpen ? "rotate(90deg)" : "none" }}>▸</span>}
                 </div>
-                {isOpen&&n.subs.length>0&&(
-                  <div style={{marginLeft:18,marginBottom:4,borderLeft:`1px solid ${C.border}`,paddingLeft:14}}>
-                    {n.subs.map(s=>(
-                      <div key={s.id} onClick={()=>setActiveSub(s.label)}
-                        style={{padding:"6px 8px",cursor:"pointer",borderRadius:6,fontSize:11,color:activeSub===s.label?"#fff":C.textSub,background:activeSub===s.label?C.card2:"transparent",fontWeight:activeSub===s.label?600:400,marginBottom:1,transition:"all 0.1s"}}
-                        onMouseEnter={e=>e.currentTarget.style.color="#fff"}
-                        onMouseLeave={e=>e.currentTarget.style.color=activeSub===s.label?"#fff":C.textSub}>
+                {isOpen && n.subs.length > 0 && (
+                  <div style={{ marginLeft: 34, marginTop: 6, marginBottom: 12, borderLeft: `1px solid rgba(255,255,255,0.08)`, paddingLeft: 18, userSelect: "none" }}>
+                    {n.subs.map(s => (
+                      <div key={s.id} onClick={() => setActiveSub(s.label)}
+                        style={{
+                          padding: "10px 0",
+                          cursor: "pointer",
+                          userSelect: "none",
+                          fontSize: 13,
+                          color: activeSub === s.label ? "#fff" : C.textSub,
+                          fontWeight: activeSub === s.label ? 700 : 400,
+                          transition: "all 0.2s",
+                          position: "relative"
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.color = "#fff"; }}
+                        onMouseLeave={e => { e.currentTarget.style.color = activeSub === s.label ? "#fff" : C.textSub; }}>
+                        {activeSub === s.label && <div style={{ position: "absolute", left: -19, top: "50%", transform: "translateY(-50%)", width: 6, height: 6, borderRadius: "50%", background: C.cyan, boxShadow: `0 0 10px ${C.cyan}` }} />}
                         {s.label}
                       </div>
                     ))}
@@ -8593,39 +8829,78 @@ if(activeNav==="laporan"){
             );
           })}
         </nav>
-        <div style={{padding:"12px 14px",borderTop:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:10}}>
-          <div style={{width:32,height:32,borderRadius:8,background:`${C.cyan}22`,border:`1px solid ${C.cyanDim}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,color:C.cyan,flexShrink:0,fontFamily:C.syne}}>O</div>
-          <div>
-            <div style={{fontSize:12,fontWeight:700,color:"#fff",fontFamily:C.sans}}>Owner</div>
-            <div style={{fontSize:9,color:C.textSub,fontFamily:C.mono}}>root@stitchlyx</div>
+        
+        <div style={{ padding: "24px 32px", borderTop: `1px solid rgba(255,255,255,0.08)`, background: "rgba(0,0,0,0.15)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <div style={{ 
+              width: 42, height: 42, borderRadius: 14, 
+              background: `linear-gradient(135deg, ${C.cyan}44, ${C.blue}44)`, 
+              border: `1px solid rgba(255,255,255,0.1)`, 
+              display: "flex", alignItems: "center", justifyContent: "center", 
+              fontSize: 18, fontWeight: 800, color: "#fff", flexShrink: 0, fontFamily: C.syne 
+            }}>A</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", fontFamily: C.syne, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Administrator</div>
+              <div style={{ fontSize: 10, color: C.textSub, fontFamily: C.mono, opacity: 0.6 }}>root@syncore</div>
+            </div>
           </div>
-          <div style={{marginLeft:"auto",fontSize:11,color:C.textSub,cursor:"pointer"}}>⏻</div>
         </div>
       </div>
 
-      <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-        <div style={{padding:"14px 28px",borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"space-between",background:C.sidebar,flexShrink:0}}>
-          <div style={{display:"flex",alignItems:"center",gap:14}}>
-            <MacDots/>
+      {/* Main Content Area */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
+        <header style={{
+          padding: "32px 48px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          background: "transparent",
+          flexShrink: 0,
+          zIndex: 10,
+          userSelect: "none",
+          cursor: "default"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+            <MacDots />
+            <div style={{ width: 1, height: 32, background: "rgba(255,255,255,0.1)" }} />
             <div>
-              <div style={{fontSize:10,color:C.textSub,fontFamily:C.mono,letterSpacing:"0.07em"}}>/ {curNav?.label}{activeSub?` / ${activeSub}`:""}</div>
-              <div style={{fontSize:18,fontWeight:800,color:"#fff",fontFamily:C.syne,letterSpacing:"-0.02em",marginTop:1}}>{activeSub||curNav?.label}</div>
+              <div style={{ fontSize: 11, color: C.textMid, fontFamily: C.mono, letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: 700 }}>
+                {curNav?.label} <span style={{ color: "rgba(255,255,255,0.1)", margin: "0 8px" }}>/</span> {activeSub}
+              </div>
+              <div style={{ fontSize: 32, fontWeight: 800, color: "#fff", fontFamily: C.syne, letterSpacing: "-0.04em", marginTop: 4 }}>
+                {activeSub || curNav?.label}
+              </div>
             </div>
           </div>
-          <div style={{display:"flex",gap:10,alignItems:"center"}}>
-            <div style={{display:"flex",alignItems:"center",gap:6,background:C.card,border:`1px solid ${C.border}`,padding:"6px 12px",borderRadius:8}}>
-              <div style={{width:5,height:5,borderRadius:"50%",background:C.cyan,boxShadow:`0 0 6px ${C.cyan}`}}/>
-              <span style={{fontSize:9,color:C.cyan,fontFamily:C.mono,letterSpacing:"0.1em"}}>SYNCED</span>
+          
+          <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+            <div style={{ 
+              background: "rgba(255,255,255,0.03)", 
+              border: `1px solid rgba(255,255,255,0.08)`, 
+              padding: "10px 20px", borderRadius: 16,
+              display: "flex", alignItems: "center", gap: 12
+            }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.cyan, boxShadow: `0 0 15px ${C.cyan}` }} />
+              <span style={{ fontSize: 11, color: "#fff", fontFamily: C.mono, fontWeight: 700 }}>SYSTEM LIVE</span>
             </div>
-            <div style={{fontSize:10,color:C.textSub,fontFamily:C.mono,background:C.card,border:`1px solid ${C.border}`,padding:"6px 12px",borderRadius:8}}>
-              {new Date().toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"})}
+            <div style={{ 
+              fontSize: 11, color: C.textSub, fontFamily: C.mono, 
+              background: "rgba(0,0,0,0.2)", border: `1px solid rgba(255,255,255,0.06)`, 
+              padding: "10px 20px", borderRadius: 16, fontWeight: 700
+            }}>
+              {new Date().toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }).toUpperCase()}
             </div>
           </div>
-        </div>
-        <div style={{flex:1,overflowY:"auto",padding:"22px 28px"}}>
-          {renderContent()}
-        </div>
+        </header>
+
+        <main style={{ flex: 1, overflowY: "auto", padding: "0 48px 48px", scrollBehavior: "smooth" }}>
+          <div style={{ maxWidth: 1600, margin: "0 auto" }}>
+            {renderContent()}
+          </div>
+        </main>
       </div>
     </div>
   );
 }
+
+
