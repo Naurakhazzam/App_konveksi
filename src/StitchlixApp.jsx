@@ -3060,15 +3060,19 @@ function TabelJenisReject() {
 }
 
 // ── KATEGORI TRANSAKSI ────────────────────────────────────────────────────────
+function getJenisKategori(kategoriId, kategoriList) {
+  return kategoriList?.find(k => k.id === kategoriId)?.jenis || null;
+}
+
 const initKategoriTrx = [
-  {id:"KTR-001",nama:"Pembelian Bahan Baku",tipe:"keluar",tambahStok:true,keterangan:"Otomatis tambah stok inventory"},
-  {id:"KTR-002",nama:"Upah Karyawan",tipe:"keluar",tambahStok:false,keterangan:"Pembayaran gaji mingguan"},
-  {id:"KTR-003",nama:"Operasional Listrik",tipe:"keluar",tambahStok:false,keterangan:"Tagihan listrik bulanan"},
-  {id:"KTR-004",nama:"Operasional Rumah",tipe:"keluar",tambahStok:false,keterangan:"Sewa atau perawatan tempat"},
-  {id:"KTR-005",nama:"Penerimaan PO",tipe:"masuk",tambahStok:false,keterangan:"Pembayaran dari klien"},
-  {id:"KTR-006",nama:"Uang Makan",tipe:"keluar",tambahStok:false,keterangan:"Uang makan harian karyawan"},
-  {id:"KTR-007",nama:"Pembelian Aksesori",tipe:"keluar",tambahStok:true,keterangan:"Kancing, resleting, label"},
-  {id:"KTR-008",nama:"Pinjaman",tipe:"masuk",tambahStok:false,keterangan:"Dana pinjaman masuk — dipisah dari margin"},
+  {id:"KTR-001",nama:"Pembelian Bahan Baku",tipe:"keluar",tambahStok:true,jenis:"direct_bahan",keterangan:"Otomatis tambah stok inventory"},
+  {id:"KTR-002",nama:"Upah Karyawan",tipe:"keluar",tambahStok:false,jenis:"direct_upah",keterangan:"Pembayaran gaji mingguan"},
+  {id:"KTR-003",nama:"Operasional Listrik",tipe:"keluar",tambahStok:false,jenis:"overhead",keterangan:"Tagihan listrik bulanan"},
+  {id:"KTR-004",nama:"Operasional Rumah",tipe:"keluar",tambahStok:false,jenis:"overhead",keterangan:"Sewa atau perawatan tempat"},
+  {id:"KTR-005",nama:"Penerimaan PO",tipe:"masuk",tambahStok:false,jenis:"masuk",keterangan:"Pembayaran dari klien"},
+  {id:"KTR-006",nama:"Uang Makan",tipe:"keluar",tambahStok:false,jenis:"overhead",keterangan:"Uang makan harian karyawan"},
+  {id:"KTR-007",nama:"Pembelian Aksesori",tipe:"keluar",tambahStok:true,jenis:"direct_bahan",keterangan:"Kancing, resleting, label"},
+  {id:"KTR-008",nama:"Pinjaman",tipe:"masuk",tambahStok:false,jenis:"masuk",keterangan:"Dana pinjaman masuk - dipisah dari margin"},
 ];
 
 function TabelKategoriTrx() {
@@ -3076,10 +3080,10 @@ function TabelKategoriTrx() {
   const [editId,setEditId]=useState(null);
   const [editVal,setEditVal]=useState({});
   const [adding,setAdding]=useState(false);
-  const [newRow,setNewRow]=useState({nama:"",tipe:"keluar",tambahStok:false,keterangan:""});
+  const [newRow,setNewRow]=useState({nama:"",tipe:"keluar",tambahStok:false,jenis:"overhead",keterangan:""});
   const [delId,setDelId]=useState(null);
 
-  function startEdit(row){setEditId(row.id);setEditVal({nama:row.nama,tipe:row.tipe,tambahStok:row.tambahStok,keterangan:row.keterangan});}
+  function startEdit(row){setEditId(row.id);setEditVal({nama:row.nama,tipe:row.tipe,tambahStok:row.tambahStok,jenis:row.jenis,keterangan:row.keterangan});}
   function saveEdit(){
     if(!editVal.nama.trim())return;
     setData(d=>d.map(x=>x.id===editId?{...x,...editVal}:x));
@@ -3088,7 +3092,7 @@ function TabelKategoriTrx() {
   function addRow(){
     if(!newRow.nama.trim())return;
     setData(d=>[...d,{id:genIdLain("KTR",d),...newRow}]);
-    setNewRow({nama:"",tipe:"keluar",tambahStok:false,keterangan:""});
+    setNewRow({nama:"",tipe:"keluar",tambahStok:false,jenis:"overhead",keterangan:""});
     setAdding(false);
   }
 
@@ -3098,8 +3102,8 @@ function TabelKategoriTrx() {
         <table style={{width:"100%",borderCollapse:"collapse",minWidth:640}}>
           <thead>
             <tr style={{background:"#0e204055"}}>
-              {["ID","Nama Kategori","Tipe","Tambah Stok","Keterangan","Aksi"].map(h=>(
-                <th key={h} style={{...TH,textAlign:["Tipe","Tambah Stok","Aksi"].includes(h)?"center":TH.textAlign}}>{h}</th>
+              {["ID","Nama Kategori","Tipe","Jenis","Tambah Stok","Keterangan","Aksi"].map(h=>(
+                <th key={h} style={{...TH,textAlign:["Tipe","Jenis","Tambah Stok","Aksi"].includes(h)?"center":TH.textAlign}}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -3113,6 +3117,15 @@ function TabelKategoriTrx() {
                     <td style={{...TD(i),textAlign:"center"}}>
                       <InlineSelectLain value={editVal.tipe} onChange={v=>setEditVal(e=>({...e,tipe:v}))}
                         options={[{value:"masuk",label:"MASUK"},{value:"keluar",label:"KELUAR"}]} style={{width:100}}/>
+                    </td>
+                    <td style={{...TD(i),textAlign:"center"}}>
+                      <InlineSelectLain value={editVal.jenis} onChange={v=>setEditVal(e=>({...e,jenis:v}))}
+                        options={[
+                          {value:"direct_bahan",label:"Direct — Bahan & Aksesori"},
+                          {value:"direct_upah",label:"Direct — Upah (auto dari Penggajian)"},
+                          {value:"overhead",label:"Overhead (dibagi rata per PCS)"},
+                          {value:"masuk",label:"Pemasukan"}
+                        ]} style={{width:140}}/>
                     </td>
                     <td style={{...TD(i),textAlign:"center"}}>
                       <ToggleLain value={editVal.tambahStok} onChange={v=>setEditVal(e=>({...e,tambahStok:v}))} labelOn="YA" labelOff="TIDAK" colorOn={C.cyan}/>
@@ -3148,6 +3161,12 @@ function TabelKategoriTrx() {
                       </span>
                     </td>
                     <td style={{...TD(i),textAlign:"center"}}>
+                      {row.jenis==="direct_bahan" && <span style={{display:"inline-block",padding:"2px 8px",borderRadius:4,fontSize:8,fontWeight:700,fontFamily:C.mono,background:"#1a2600",color:"#4ade80"}}>DIRECT BAHAN</span>}
+                      {row.jenis==="direct_upah" && <span style={{display:"inline-block",padding:"2px 8px",borderRadius:4,fontSize:8,fontWeight:700,fontFamily:C.mono,background:"#1a1040",color:"#a78bfa"}}>DIRECT UPAH</span>}
+                      {row.jenis==="overhead" && <span style={{display:"inline-block",padding:"2px 8px",borderRadius:4,fontSize:8,fontWeight:700,fontFamily:C.mono,background:"#1a1000",color:"#fb923c"}}>OVERHEAD</span>}
+                      {row.jenis==="masuk" && <span style={{display:"inline-block",padding:"2px 8px",borderRadius:4,fontSize:8,fontWeight:700,fontFamily:C.mono,background:"#001a20",color:"#22d3ee"}}>MASUK</span>}
+                    </td>
+                    <td style={{...TD(i),textAlign:"center"}}>
                       {row.tambahStok?(
                         <span style={{fontSize:9,padding:"2px 8px",borderRadius:99,fontFamily:C.mono,fontWeight:700,
                           background:`${C.cyan}18`,color:C.cyan,border:`1px solid ${C.cyanDim}`}}>AUTO STOK</span>
@@ -3173,6 +3192,15 @@ function TabelKategoriTrx() {
                 <td style={{padding:"10px 14px",textAlign:"center"}}>
                   <InlineSelectLain value={newRow.tipe} onChange={v=>setNewRow(r=>({...r,tipe:v}))}
                     options={[{value:"masuk",label:"MASUK"},{value:"keluar",label:"KELUAR"}]} style={{width:100}}/>
+                </td>
+                <td style={{padding:"10px 14px",textAlign:"center"}}>
+                  <InlineSelectLain value={newRow.jenis} onChange={v=>setNewRow(r=>({...r,jenis:v}))}
+                    options={[
+                      {value:"direct_bahan",label:"Direct — Bahan & Aksesori"},
+                      {value:"direct_upah",label:"Direct — Upah (auto dari Penggajian)"},
+                      {value:"overhead",label:"Overhead (dibagi rata per PCS)"},
+                      {value:"masuk",label:"Pemasukan"}
+                    ]} style={{width:140}}/>
                 </td>
                 <td style={{padding:"10px 14px",textAlign:"center"}}>
                   <ToggleLain value={newRow.tambahStok} onChange={v=>setNewRow(r=>({...r,tambahStok:v}))} labelOn="YA" labelOff="TIDAK" colorOn={C.cyan}/>
@@ -4438,7 +4466,29 @@ const initBundleDB = {
   "PO0002-Nec-blck-s-0004-BDL02-10-03-25":{kodeBarcode:"PO0002-Nec-blck-s-0004-BDL02-10-03-25",po:"PO-0002",model:"Neck",size:"S",warna:"Black",skuKlien:"ely330",qtyBundle:9,noUrut:2,totalBundle:2,statusTahap:{cutting:{status:"selesai",qtyTerima:9,qtySelesai:8,waktuTerima:"08:05",waktuSelesai:"10:05",karyawan:"Ahmad Fauzi"},jahit:emptyTahapStatus(),lkancing:emptyTahapStatus(),bbenang:emptyTahapStatus(),qc:emptyTahapStatus(),steam:emptyTahapStatus(),packing:emptyTahapStatus()}},
   "PO0001-Air-blck-xl-0005-BDL01-01-03-25":{kodeBarcode:"PO0001-Air-blck-xl-0005-BDL01-01-03-25",po:"PO-0001",model:"Airflow",size:"XL",warna:"Black",skuKlien:"ely292",qtyBundle:5,noUrut:1,totalBundle:2,statusTahap:{cutting:{status:"selesai",qtyTerima:5,qtySelesai:7,waktuTerima:"08:00",waktuSelesai:"09:15",karyawan:"Ahmad Fauzi",koreksiStatus:"pending"},jahit:emptyTahapStatus(),lkancing:emptyTahapStatus(),bbenang:emptyTahapStatus(),qc:emptyTahapStatus(),steam:emptyTahapStatus(),packing:emptyTahapStatus()}},
   "PO0002-Nec-blck-m-0006-BDL01-10-03-25":{kodeBarcode:"PO0002-Nec-blck-m-0006-BDL01-10-03-25",po:"PO-0002",model:"Neck",size:"M",warna:"Black",skuKlien:"ely331",qtyBundle:9,noUrut:1,totalBundle:2,statusTahap:{cutting:{status:"selesai",qtyTerima:9,qtySelesai:11,waktuTerima:"08:30",waktuSelesai:"10:00",karyawan:"Budi Santoso",koreksiStatus:"pending"},jahit:emptyTahapStatus(),lkancing:emptyTahapStatus(),bbenang:emptyTahapStatus(),qc:emptyTahapStatus(),steam:emptyTahapStatus(),packing:emptyTahapStatus()}},
-  "PO0001-Air-blck-m-0002-BDL02-01-03-25":{kodeBarcode:"PO0001-Air-blck-m-0002-BDL02-01-03-25",po:"PO-0001",model:"Airflow",size:"M",warna:"Black",skuKlien:"ely290",qtyBundle:6,noUrut:2,totalBundle:2,statusTahap:{cutting:{status:"selesai",qtyTerima:6,qtySelesai:6,waktuTerima:"08:15",waktuSelesai:"09:45",karyawan:"Ahmad Fauzi"},jahit:{status:"selesai",qtyTerima:6,qtySelesai:4,waktuTerima:"10:30",waktuSelesai:"14:20",karyawan:"Siti Rahayu",koreksiStatus:"approved",koreksiAlasan:"2 pcs rusak mesin"},lkancing:emptyTahapStatus(),bbenang:emptyTahapStatus(),qc:emptyTahapStatus(),steam:emptyTahapStatus(),packing:emptyTahapStatus()}}
+  "PO0001-Air-blck-m-0002-BDL02-01-03-25":{kodeBarcode:"PO0001-Air-blck-m-0002-BDL02-01-03-25",po:"PO-0001",model:"Airflow",size:"M",warna:"Black",skuKlien:"ely290",qtyBundle:6,noUrut:2,totalBundle:2,statusTahap:{cutting:{status:"selesai",qtyTerima:6,qtySelesai:6,waktuTerima:"08:15",waktuSelesai:"09:45",karyawan:"Ahmad Fauzi"},jahit:{status:"selesai",qtyTerima:6,qtySelesai:4,waktuTerima:"10:30",waktuSelesai:"14:20",karyawan:"Siti Rahayu",koreksiStatus:"approved",koreksiAlasan:"2 pcs rusak mesin"},lkancing:emptyTahapStatus(),bbenang:emptyTahapStatus(),qc:emptyTahapStatus(),steam:emptyTahapStatus(),packing:emptyTahapStatus()}},
+  "PO0001-Air-blck-l-0003-BDL01-TEST":{
+    kodeBarcode:"PO0001-Air-blck-l-0003-BDL01-TEST",
+    po:"PO-0001", model:"Airflow", size:"L", warna:"Black", skuKlien:"ely291",
+    qtyBundle:8, noUrut:1, totalBundle:2,
+    statusTahap:{
+      cutting:emptyTahapStatus(),
+      jahit:emptyTahapStatus(), lkancing:emptyTahapStatus(),
+      bbenang:emptyTahapStatus(), qc:emptyTahapStatus(),
+      steam:emptyTahapStatus(), packing:emptyTahapStatus()
+    }
+  },
+  "PO0001-Air-blck-l-0003-BDL02-TEST":{
+    kodeBarcode:"PO0001-Air-blck-l-0003-BDL02-TEST",
+    po:"PO-0001", model:"Airflow", size:"L", warna:"Black", skuKlien:"ely291",
+    qtyBundle:8, noUrut:2, totalBundle:2,
+    statusTahap:{
+      cutting:emptyTahapStatus(),
+      jahit:emptyTahapStatus(), lkancing:emptyTahapStatus(),
+      bbenang:emptyTahapStatus(), qc:emptyTahapStatus(),
+      steam:emptyTahapStatus(), packing:emptyTahapStatus()
+    }
+  }
 };
 
 const PO_CUTTING = [
@@ -4483,6 +4533,49 @@ const initKoreksiQueue = [
 
 function waktuSekarang(){return new Date().toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});}
 function tanggalSekarang(){return new Date().toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"});}
+
+function ModalPemakaianBahan({ bundle, onConfirm, onCancel }) {
+  const [kain, setKain] = useState("");
+  const [berat, setBerat] = useState("");
+  const valid = Number(kain) > 0 || Number(berat) > 0;
+
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.8)",zIndex:210,display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <div style={{background:C.bg,width:400,borderRadius:12,border:`1px solid ${C.yellow}`,overflow:"hidden"}}>
+        <div style={{padding:"14px 20px",background:"#151515",borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:10}}>
+          <div style={{display:"flex",gap:6}}><div style={{width:10,height:10,borderRadius:"50%",background:C.red}}/><div style={{width:10,height:10,borderRadius:"50%",background:C.yellow}}/><div style={{width:10,height:10,borderRadius:"50%",background:C.green}}/></div>
+          <div style={{fontSize:11,fontWeight:700,fontFamily:C.mono,color:C.yellow,letterSpacing:"0.05em",marginLeft:10}}>INPUT PEMAKAIAN BAHAN — WAJIB</div>
+        </div>
+        <div style={{padding:"20px"}}>
+          <div style={{background:C.card,padding:"10px 14px",borderRadius:8,border:`1px solid ${C.border}`,marginBottom:16}}>
+            <div style={{fontSize:10,color:C.textSub,fontFamily:C.mono}}>PO: <span style={{color:C.cyan,fontWeight:700}}>{bundle.po}</span></div>
+            <div style={{fontSize:12,fontWeight:700,color:C.text,margin:"4px 0"}}>{bundle.model} {bundle.warna} {bundle.size}</div>
+            <div style={{fontSize:10,color:C.textSub,fontFamily:C.mono}}>SKU Klien: {bundle.skuKlien}</div>
+          </div>
+          <div style={{fontSize:11,color:C.yellow,marginBottom:16,display:"flex",gap:8,alignItems:"flex-start"}}>
+            <span>⚠</span>
+            <span>Ini adalah bundle PERTAMA artikel ini di PO ini. Pemakaian bahan wajib diisi.</span>
+          </div>
+          <div style={{marginBottom:14}}>
+            <div style={{fontSize:10,color:C.textSub,marginBottom:6}}>Pemakaian Kain (meter/pcs)</div>
+            <input type="number" min="0.01" step="0.01" value={kain} onChange={e=>setKain(e.target.value)} style={{width:"100%",background:"#050e1f",border:`1px solid ${C.border}`,borderRadius:6,padding:"8px 12px",color:C.text,fontFamily:C.mono}} placeholder="0.00" />
+          </div>
+          <div style={{marginBottom:14}}>
+            <div style={{fontSize:10,color:C.textSub,marginBottom:6}}>Berat Bahan (gram/pcs)</div>
+            <input type="number" min="1" step="1" value={berat} onChange={e=>setBerat(e.target.value)} style={{width:"100%",background:"#050e1f",border:`1px solid ${C.border}`,borderRadius:6,padding:"8px 12px",color:C.text,fontFamily:C.mono}} placeholder="0" />
+          </div>
+          <div style={{fontSize:9,color:C.textSub,lineHeight:1.5,marginBottom:20}}>
+            *Nilai ini berlaku untuk SEMUA bundle artikel ini di PO ini. Artikel yang sama di PO berbeda bisa diisi berbeda.
+          </div>
+          <div style={{display:"flex",gap:10}}>
+            <button onClick={onCancel} style={{flex:1,padding:"10px",background:"transparent",color:C.textMid,border:`1px solid ${C.border}`,borderRadius:6,fontFamily:C.mono,fontWeight:700,cursor:"pointer"}}>BATAL</button>
+            <button onClick={()=>{if(!valid)return;onConfirm({pemakaianKainMeter:Number(kain),pemakaianBeratGram:Number(berat)})}} disabled={!valid} style={{flex:1,padding:"10px",background:valid?C.green:"#1a2030",color:valid?"#000":C.textMid,border:`1px solid ${valid?C.green:"#1a2030"}`,borderRadius:6,fontFamily:C.mono,fontWeight:700,cursor:valid?"pointer":"not-allowed"}}>SIMPAN</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ModalQtySelesai({bundle,tahapKey,onConfirm,onCancel,ownerAuthDone,onOwnerAuth}) {
   const qtyTarget=bundle.statusTahap[tahapKey]?.qtyTerima||bundle.qtyBundle;
@@ -4571,10 +4664,64 @@ function ModalReject({bundle,onConfirm,onCancel}) {
   );
 }
 
-function CuttingStation() {
+function CuttingStation({sharedBundleDB,setSharedBundleDB,pemakaianBahan,setPemakaianBahan}) {
   const [poData,setPoData]=useState(PO_CUTTING.map(po=>({...po,artikel:po.artikel.map(a=>({...a}))})));
   const [selected,setSelected]=useState(new Set());
   const [expandPO,setExpandPO]=useState(new Set(["PO-0001"]));
+
+  // --- SCAN STATE ---
+  const [karyawan,setKaryawan]=useState("");
+  const [barcode,setBarcode]=useState("");
+  const [showDrop,setShowDrop]=useState(false);
+  const [logScan,setLogScan]=useState([]);
+  const [modalSelesai,setModalSelesai]=useState(null);
+  const [modalPemakaian,setModalPemakaian]=useState(null);
+  const [pendingBundle,setPendingBundle]=useState(null);
+  const [ownerDone,setOwnerDone]=useState(false);
+  const inputRef=useRef(null);
+  const karyawanCutting=KARYAWAN_AKTIF.filter(k=>k.tahap.includes("Cutting"));
+  const bundleDB=sharedBundleDB||{};
+  const setBundleDB=setSharedBundleDB||(()=>{});
+
+  // Hanya tampilkan bundle yang sudah barcode-printed
+  const bundlesPrinted=Object.values(bundleDB).filter(b=>b.statusTahap?.cutting?.status==null || b.statusTahap?.cutting?.status==="selesai" || true);
+  const allBundleKeys=Object.keys(bundleDB);
+  const suggestions=barcode.trim().length>=2?allBundleKeys.filter(k=>k.toLowerCase().includes(barcode.trim().toLowerCase())).slice(0,8):[];
+  const canScan=karyawan&&barcode.trim();
+
+  function addLog(e){setLogScan(l=>[{id:Date.now(),waktu:waktuSekarang(),...e},...l.slice(0,29)]);}
+
+  function handleScanCutting(){
+    const kode=barcode.trim();if(!kode)return;
+    setBarcode("");setShowDrop(false);
+    const bundle=bundleDB[kode];
+    if(!bundle){addLog({barcode:kode,status:"error",msg:"Barcode tidak ditemukan di sistem."});return;}
+    const st=bundle.statusTahap?.cutting;
+    if(st?.status==="selesai"){
+      addLog({barcode:kode,status:"info",msg:"Bundle ini sudah SELESAI di Cutting."});return;
+    }
+    // Cek apakah perlu input pemakaian bahan (bundle PERTAMA artikel ini di PO ini)
+    const sudahAda=pemakaianBahan?.find(p=>p.po===bundle.po&&p.skuKlien===bundle.skuKlien);
+    if(!sudahAda){
+      setPendingBundle(bundle);
+      setModalPemakaian(bundle);
+      return;
+    }
+    // Sudah ada pemakaian → langsung tampil modal QTY
+    setModalSelesai({...bundle, _qtyTerima:bundle.qtyBundle});
+  }
+
+  function handleSelesaiConfirm({qty,alasan}){
+    if(!modalSelesai)return;
+    const kode=modalSelesai.kodeBarcode;
+    setBundleDB(db=>({...db,[kode]:{...db[kode],statusTahap:{...db[kode].statusTahap,cutting:{
+      status:"selesai",qtyTerima:modalSelesai.qtyBundle,qtySelesai:qty,
+      waktuTerima:waktuSekarang(),waktuSelesai:waktuSekarang(),karyawan,
+      ...(qty!==modalSelesai.qtyBundle?{koreksiStatus:qty>modalSelesai.qtyBundle?"pending":"approved",koreksiAlasan:alasan}:{})
+    }}}}));
+    addLog({barcode:kode,status:"info",msg:`SELESAI Cutting — ${qty} pcs. Karyawan: ${karyawan}`,fase:"selesai",qtySelesai:qty,karyawan});
+    setModalSelesai(null);setOwnerDone(false);
+  }
 
   function toggleArtikel(poKode,skuKlien){const key=`${poKode}|${skuKlien}`;setSelected(s=>{const ns=new Set(s);ns.has(key)?ns.delete(key):ns.add(key);return ns;});}
   function togglePO(poKode){const po=poData.find(p=>p.kode===poKode);const keys=po.artikel.map(a=>`${poKode}|${a.skuKlien}`);const allSel=keys.every(k=>selected.has(k));setSelected(s=>{const ns=new Set(s);keys.forEach(k=>allSel?ns.delete(k):ns.add(k));return ns;});}
@@ -4605,6 +4752,7 @@ function CuttingStation() {
 
   return (
     <div>
+      {/* TOOLBAR PRINT */}
       <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:14,padding:"12px 16px",background:C.card2,borderRadius:10,border:`1px solid ${C.border}`}}>
         <div style={{flex:1,fontSize:10,color:C.textSub,fontFamily:C.sans}}>
           {anySelected?<><span style={{color:C.yellow,fontWeight:700}}>{selectedArtikel.length} artikel dipilih</span> · {selectedArtikel.reduce((s,a)=>s+a.qtyOrder,0)} pcs</>:"Pilih artikel yang akan diproses cutting"}
@@ -4614,6 +4762,7 @@ function CuttingStation() {
         {!allWOPrinted&&anySelected&&<div style={{fontSize:9,color:C.orange,fontFamily:C.sans}}>⚠ Print WO dulu</div>}
       </div>
 
+      {/* LIST PO + ARTIKEL */}
       {poData.map(po=>(
         <Panel key={po.kode} title={`${po.kode} — ${po.klien}`} accent={C.yellow}
           action={expandPO.has(po.kode)?"▾ TUTUP":"▸ BUKA"}
@@ -4654,12 +4803,114 @@ function CuttingStation() {
           )}
         </Panel>
       ))}
-      <div style={{padding:"9px 13px",background:C.card2,borderRadius:8,border:`1px solid ${C.border}`,fontSize:9,color:C.textMid,fontFamily:C.sans,lineHeight:1.7}}>⬡ Alur Cutting: Pilih artikel → Print Work Order dulu → Print Barcode → tempel ke bundle fisik</div>
+
+      {/* AREA SCAN — muncul selalu */}
+      <Panel title="SCAN BUNDLE — HASIL CUTTING" accent={C.yellow}>
+        <div style={{padding:"16px 18px"}}>
+
+          {/* PILIH KARYAWAN */}
+          <div style={{marginBottom:14}}>
+            <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,marginBottom:6}}>KARYAWAN CUTTING <span style={{color:C.red}}>*</span></div>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              {karyawanCutting.map(k=>(
+                <button key={k.id} onClick={()=>setKaryawan(k.nama)}
+                  style={{padding:"5px 14px",fontSize:10,fontWeight:700,fontFamily:C.mono,
+                    background:karyawan===k.nama?`${C.yellow}22`:"transparent",
+                    color:karyawan===k.nama?C.yellow:C.textMid,
+                    border:`1px solid ${karyawan===k.nama?C.yellow:C.border}`,
+                    borderRadius:6,cursor:"pointer"}}>{k.nama}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* INPUT BARCODE */}
+          <div style={{display:"flex",gap:10,alignItems:"flex-start",position:"relative"}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,marginBottom:6}}>SCAN / INPUT KODE BARCODE</div>
+              <div style={{position:"relative"}}>
+                <input
+                  ref={inputRef}
+                  value={barcode}
+                  onChange={e=>{setBarcode(e.target.value);setShowDrop(true);}}
+                  onKeyDown={e=>{if(e.key==="Enter"&&canScan)handleScanCutting();}}
+                  disabled={!karyawan}
+                  placeholder={karyawan?"Scan atau ketik kode barcode bundle..":"Pilih karyawan dulu"}
+                  style={{width:"100%",background:karyawan?"#050e1f":"#0a0a0a",border:`1px solid ${C.yellow}44`,
+                    borderRadius:8,padding:"10px 14px",color:C.text,fontFamily:C.mono,fontSize:12,outline:"none",
+                    opacity:karyawan?1:0.5}}
+                />
+                {showDrop&&suggestions.length>0&&(
+                  <div style={{position:"absolute",top:"100%",left:0,right:0,background:C.card,
+                    border:`1px solid ${C.yellow}44`,borderRadius:8,zIndex:50,overflow:"hidden",marginTop:4}}>
+                    {suggestions.map((k,i)=>(
+                      <div key={k} onClick={()=>{setBarcode(k);setShowDrop(false);setTimeout(()=>inputRef.current?.focus(),50);}}
+                        style={{padding:"8px 14px",fontSize:11,fontFamily:C.mono,cursor:"pointer",
+                          background:i%2===0?C.card:C.card2,color:C.text}}>{k}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div style={{paddingTop:22}}>
+              <BtnProd6 onClick={handleScanCutting} disabled={!canScan} color="yellow">PROSES ↵</BtnProd6>
+            </div>
+          </div>
+
+          {/* LOG SCAN */}
+          {logScan.length>0&&(
+            <div style={{marginTop:16,maxHeight:200,overflowY:"auto"}}>
+              {logScan.map(l=>(
+                <div key={l.id} style={{padding:"7px 0",borderBottom:`1px solid ${C.border}`,display:"flex",gap:10,alignItems:"flex-start"}}>
+                  <div style={{fontSize:9,color:C.textSub,fontFamily:C.mono,background:"#050e1f",padding:"2px 6px",borderRadius:4,whiteSpace:"nowrap"}}>{l.waktu}</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:11,fontWeight:700,fontFamily:C.mono,color:C.text}}>{l.barcode}</div>
+                    <div style={{fontSize:9,color:l.status==="error"?C.red:l.status==="info"?C.cyan:C.green,lineHeight:1.4}}>{l.msg}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </Panel>
+
+      <div style={{padding:"9px 13px",background:C.card2,borderRadius:8,border:`1px solid ${C.border}`,fontSize:9,color:C.textMid,fontFamily:C.sans,lineHeight:1.7}}>⬡ Alur Cutting: Pilih artikel → Print Work Order dulu → Print Barcode → tempel ke bundle fisik → Scan bundle untuk mencatat hasil cutting</div>
+
+      {/* MODAL PEMAKAIAN BAHAN */}
+      {modalPemakaian&&(
+        <ModalPemakaianBahan
+          bundle={modalPemakaian}
+          onConfirm={({pemakaianKainMeter,pemakaianBeratGram})=>{
+            setPemakaianBahan(prev=>[...prev,{
+              po:pendingBundle.po,skuKlien:pendingBundle.skuKlien,
+              artikelNama:`${pendingBundle.model} ${pendingBundle.warna} ${pendingBundle.size}`,
+              pemakaianKainMeter,pemakaianBeratGram,
+              inputOleh:karyawan||"Admin",waktuInput:new Date().toLocaleString("id-ID")
+            }]);
+            setModalPemakaian(null);
+            setModalSelesai({...pendingBundle,_qtyTerima:pendingBundle.qtyBundle});
+            setPendingBundle(null);
+          }}
+          onCancel={()=>{
+            setModalPemakaian(null);setPendingBundle(null);setBarcode("");
+            addLog({barcode:modalPemakaian.kodeBarcode,status:"error",msg:"Dibatalkan — pemakaian bahan wajib diisi dulu."});
+          }}
+        />
+      )}
+
+      {/* MODAL QTY SELESAI */}
+      {modalSelesai&&(
+        <ModalQtySelesai
+          bundle={modalSelesai} tahapKey="cutting"
+          onConfirm={handleSelesaiConfirm}
+          onCancel={()=>{setModalSelesai(null);setOwnerDone(false);}}
+          ownerAuthDone={ownerDone} onOwnerAuth={()=>setOwnerDone(true)}
+        />
+      )}
     </div>
   );
 }
 
-function ScanStation({tahap,sharedBundleDB,setSharedBundleDB,koreksiQueue,setKoreksiQueue}) {
+function ScanStation({tahap,sharedBundleDB,setSharedBundleDB,koreksiQueue,setKoreksiQueue,pemakaianBahan,setPemakaianBahan}) {
   const perluKaryawan=["Cutting","Jahit"].includes(tahap);
   const tahapKey=TAHAP_KEY[tahap];
   const tahapIdx=URUTAN_TAHAP.indexOf(tahapKey);
@@ -4674,6 +4925,8 @@ function ScanStation({tahap,sharedBundleDB,setSharedBundleDB,koreksiQueue,setKor
   const setBundleDB=setSharedBundleDB;
   const [logScan,setLogScan]=useState([]);
   const [modalSelesai,setModalSelesai]=useState(null);
+  const [modalPemakaian, setModalPemakaian] = useState(null);
+  const [pendingBundle, setPendingBundle] = useState(null);
   const [ownerDone,setOwnerDone]=useState(false);
   const [modalReject,setModalReject]=useState(null);
   const [lastBundle,setLastBundle]=useState(null);
@@ -4718,6 +4971,17 @@ function ScanStation({tahap,sharedBundleDB,setSharedBundleDB,koreksiQueue,setKor
         const nm=Object.entries(TAHAP_KEY).find(([,v])=>v===tahapSebelumKey)?.[0]||tahapSebelumKey;
         addLog({barcode:kode,status:"error",msg:`⏳ Bundle menunggu review koreksi di tahap ${nm}. Hubungi Owner.`});return;
       }
+    }
+
+    if(tahap === "Cutting"){
+      const sudahAda = pemakaianBahan?.find(p => p.po === bundle.po && p.skuKlien === bundle.skuKlien);
+      if(!sudahAda){
+        setPendingBundle(bundle);
+        setModalPemakaian(bundle);
+        return; 
+      }
+      setModalSelesai({...bundle, _qtyTerima: bundle.qtyBundle});
+      return; 
     }
     if(!st||st.status===null){
       const qtyTerima=tahapSebelumKey?(bundle.statusTahap[tahapSebelumKey]?.qtySelesai||bundle.qtyBundle):bundle.qtyBundle;
@@ -4901,6 +5165,32 @@ function ScanStation({tahap,sharedBundleDB,setSharedBundleDB,koreksiQueue,setKor
           </>
         )}
       </Panel>
+
+      {modalPemakaian && (
+        <ModalPemakaianBahan
+          bundle={modalPemakaian}
+          onConfirm={({pemakaianKainMeter, pemakaianBeratGram}) => {
+            setPemakaianBahan(prev => [...prev, {
+              po: pendingBundle.po,
+              skuKlien: pendingBundle.skuKlien,
+              artikelNama: `${pendingBundle.model} ${pendingBundle.warna} ${pendingBundle.size}`,
+              pemakaianKainMeter,
+              pemakaianBeratGram,
+              inputOleh: karyawan || "Admin",
+              waktuInput: new Date().toLocaleString("id-ID")
+            }]);
+            setModalPemakaian(null);
+            setModalSelesai({...pendingBundle, _qtyTerima: pendingBundle.qtyBundle});
+            setPendingBundle(null);
+          }}
+          onCancel={() => {
+            setModalPemakaian(null);
+            setPendingBundle(null);
+            setBarcode("");
+            addLog({barcode: modalPemakaian.kodeBarcode, status:"error", msg:"Scan dibatalkan — pemakaian bahan wajib diisi."});
+          }}
+        />
+      )}
 
       {modalSelesai&&<ModalQtySelesai bundle={modalSelesai} tahapKey={tahapKey} onConfirm={handleSelesaiConfirm} onCancel={()=>{setModalSelesai(null);setOwnerDone(false);}} ownerAuthDone={ownerDone} onOwnerAuth={()=>setOwnerDone(true)}/>}
       {modalReject&&<ModalReject bundle={modalReject} onConfirm={handleRejectConfirm} onCancel={()=>setModalReject(null)}/>}
@@ -5392,13 +5682,13 @@ const SUB_TABS_PROD6=[
 ];
 const TAB_TO_TAHAP={cutting:"Cutting",jahit:"Jahit",lkancing:"Lubang Kancing",bbenang:"Buang Benang",qc:"QC",steam:"Steam",packing:"Packing"};
 
-function TabProduksi({defaultTab="cutting",sharedBundleDB,setSharedBundleDB,koreksiQueue,setKoreksiQueue}) {
+function TabProduksi({defaultTab="cutting",sharedBundleDB,setSharedBundleDB,koreksiQueue,setKoreksiQueue,pemakaianBahan,setPemakaianBahan}) {
   const [activeTab,setActiveTab]=useState(defaultTab);
   const cur=SUB_TABS_PROD6.find(t=>t.id===activeTab);
   return (
     <div>
       <div style={{marginBottom:14}}><div style={{fontSize:10,color:C.textSub,fontFamily:C.mono,letterSpacing:"0.07em"}}>PRODUKSI / {cur?.label.toUpperCase()}</div></div>
-      {activeTab==="monitoring"?<Monitoring/>:activeTab==="warning"?<WarningProses/>:activeTab==="cutting"?<CuttingStation/>:<ScanStation tahap={TAB_TO_TAHAP[activeTab]} sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue}/>}
+      {activeTab==="monitoring"?<Monitoring/>:activeTab==="warning"?<WarningProses/>:activeTab==="cutting"?<CuttingStation sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} pemakaianBahan={pemakaianBahan} setPemakaianBahan={setPemakaianBahan}/>:<ScanStation tahap={TAB_TO_TAHAP[activeTab]} sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} pemakaianBahan={pemakaianBahan} setPemakaianBahan={setPemakaianBahan} />}
     </div>
   );
 }
@@ -6380,7 +6670,99 @@ function ModalKonfirmasiKasbon({ledger,onConfirm,onCancel}) {
 }
 
 // ── REKAP GAJI ────────────────────────────────────────────────────────────────
-function RekapGaji() {
+function ModalRingkasanPeriode({ periode, totalDibayar, detailKaryawan, sudahDirekap, onRekap, onTutup, jurnal, setJurnal }) {
+  function handleRekap() {
+    const entryJurnal = {
+      id: "JRN-" + Date.now(),
+      kategori: "KTR-002",
+      namaKategori: "Upah Karyawan",
+      jenis: "direct_upah",
+      tipe: "keluar",
+      jumlah: totalDibayar,
+      keterangan: `Upah ${periode}`,
+      noFaktur: null,
+      tagPO: null,
+      detailUpah: detailKaryawan,
+      tanggal: new Date().toLocaleDateString("id-ID"),
+      waktu: new Date().toLocaleTimeString("id-ID", {hour:"2-digit", minute:"2-digit"}),
+      tambahStok: false
+    };
+    if (setJurnal) setJurnal(prev => [entryJurnal, ...prev]);
+    if (onRekap) onRekap();
+  }
+
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.8)",zIndex:210,display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <div style={{background:C.card,border:`1px solid ${sudahDirekap?C.border:C.green}`,borderRadius:12,width:500,maxWidth:"95%",boxShadow:"0 10px 40px rgba(0,0,0,0.5)",overflow:"hidden"}}>
+        <div style={{padding:"12px 18px",background:C.card2,borderBottom:`1px solid ${sudahDirekap?C.border:C.green}`,display:"flex",alignItems:"center",gap:10}}>
+          <div style={{display:"flex",gap:4}}>
+            <span style={{width:8,height:8,borderRadius:"50%",background:C.red}}></span>
+            <span style={{width:8,height:8,borderRadius:"50%",background:C.yellow}}></span>
+            <span style={{width:8,height:8,borderRadius:"50%",background:C.green}}></span>
+          </div>
+          <span style={{fontSize:10,fontWeight:700,fontFamily:C.mono,color:C.textSub,letterSpacing:"0.05em"}}>PEMBAYARAN BERHASIL</span>
+        </div>
+        <div style={{padding:"24px 24px" }}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16}}>
+            <div>
+              <div style={{fontSize:12,color:C.textSub,fontFamily:C.sans}}>Periode</div>
+              <div style={{fontSize:14,fontWeight:700,color:C.text}}>{periode}</div>
+            </div>
+            <div style={{padding:"4px 10px",background:`${C.green}20`,color:C.green,borderRadius:6,fontFamily:C.mono,fontSize:10,fontWeight:700}}>✓ LUNAS</div>
+          </div>
+          <div style={{fontSize:36,fontWeight:800,fontFamily:C.syne,color:C.green,marginBottom:20}}>
+            {rp(totalDibayar)}
+          </div>
+          
+          <div style={{maxHeight:150,overflowY:"auto",marginBottom:16}}>
+            <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
+              <thead>
+                <tr>
+                  <th style={{textAlign:"left",padding:6,color:C.textMid,borderBottom:`1px solid ${C.border}`}}>Nama</th>
+                  <th style={{textAlign:"right",padding:6,color:C.textMid,borderBottom:`1px solid ${C.border}`}}>Upah Bersih</th>
+                  <th style={{textAlign:"center",padding:6,color:C.textMid,borderBottom:`1px solid ${C.border}`}}>PO</th>
+                  <th style={{textAlign:"center",padding:6,color:C.textMid,borderBottom:`1px solid ${C.border}`}}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {detailKaryawan.map((d,i)=>(
+                  <tr key={i}>
+                    <td style={{padding:6,borderBottom:`1px solid ${C.card2}`,color:C.text}}>{d.karyawan}</td>
+                    <td style={{padding:6,borderBottom:`1px solid ${C.card2}`,textAlign:"right",fontFamily:C.mono}}>{rp(d.jumlah)}</td>
+                    <td style={{padding:6,borderBottom:`1px solid ${C.card2}`,textAlign:"center",fontFamily:C.mono,color:C.textSub}}>{d.po}</td>
+                    <td style={{padding:6,borderBottom:`1px solid ${C.card2}`,textAlign:"center",color:C.green}}>✓</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{height:1,background:C.border,marginBottom:20}}></div>
+
+          {!sudahDirekap ? (
+            <>
+              <div style={{padding:12,background:`${C.cyan}10`,border:`1px solid ${C.cyan}44`,borderRadius:8,marginBottom:16,fontSize:11,color:C.cyan,lineHeight:1.5}}>
+                ℹ️ Klik REKAP untuk mencatat pengeluaran ini ke Jurnal Umum secara otomatis.
+              </div>
+              <BtnGaji full onClick={handleRekap} color="cyan" style={{marginBottom:10}}>REKAP KE JURNAL UMUM</BtnGaji>
+              <BtnGaji full outline onClick={onTutup}>TUTUP KEMBALI</BtnGaji>
+            </>
+          ) : (
+            <>
+              <div style={{padding:12,background:`${C.card2}`,border:`1px dashed ${C.border}`,borderRadius:8,marginBottom:16,fontSize:11,color:C.textSub,textAlign:"center",fontWeight:700}}>
+                ✓ Sudah Direkap ke Jurnal Umum
+              </div>
+              <BtnGaji full outline onClick={onTutup}>TUTUP</BtnGaji>
+            </>
+          )}
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RekapGaji({jurnal, setJurnal}) {
   // ── semua useState wajib di atas ──
   const [ledger,setLedger]           = useState(initLedger);
   const [periode,setPeriode]         = useState("P001");
@@ -6388,6 +6770,7 @@ function RekapGaji() {
   const [konfirmasiAll,setKonfirmasiAll] = useState(false);
   const [slipHistory,setSlipHistory] = useState(initSlipHistory);
   const [modalKasbon,setModalKasbon] = useState(null);
+  const [modalRingkasan, setModalRingkasan] = useState(null);
 
   const filtered    = ledger.filter(l=>l.periodeId===periode);
   const periodeInfo = PERIODE_LIST.find(p=>p.id===periode);
@@ -6418,6 +6801,19 @@ function RekapGaji() {
       setModalKasbon(l);
     } else {
       prosessBayar(l,0);
+      const {upah,potongan,rework}=hitungGaji(l);
+      const detail = [{
+         karyawan: l.nama,
+         jumlah: upah-potongan+rework,
+         po: l.poTerkait || "PO-0001",
+         status: "Lunas"
+      }];
+      setModalRingkasan({
+         periode: periodeInfo?.label || periode,
+         totalDibayar: detail[0].jumlah,
+         detailKaryawan: detail,
+         sudahDirekap: false
+      });
     }
   }
 
@@ -6431,6 +6827,23 @@ function RekapGaji() {
     }
     pending.forEach(l=>prosessBayar(l,0));
     setKonfirmasiAll(false);
+
+    // Kumpulkan detail per karyawan untuk rekap
+    const detail = pending.map(l => {
+      const {upah,potongan,rework} = hitungGaji(l);
+      return {
+        karyawan: l.nama,
+        jumlah: upah - potongan + rework,
+        po: l.poTerkait || "PO-0001",
+        status: "Lunas"
+      }
+    });
+    setModalRingkasan({
+      periode: periodeInfo?.label || periode,
+      totalDibayar: detail.reduce((s,d)=>s+d.jumlah, 0),
+      detailKaryawan: detail,
+      sudahDirekap: false
+    });
   }
 
   const totalUpahPeriode = filtered.reduce((s,l)=>{
@@ -6565,7 +6978,33 @@ function RekapGaji() {
       </Panel>
 
       {detailLedger&&<ModalDetailGaji ledger={detailLedger} onClose={()=>setDetailLedger(null)}/>}
-      {modalKasbon&&<ModalKonfirmasiKasbon ledger={modalKasbon} onConfirm={(pot)=>{prosessBayar(modalKasbon,pot);setModalKasbon(null);}} onCancel={()=>setModalKasbon(null)}/>}
+      {modalKasbon&&<ModalKonfirmasiKasbon ledger={modalKasbon} onConfirm={(pot)=>{
+        prosessBayar(modalKasbon,pot);
+        setModalKasbon(null);
+        const {upah,potongan,rework}=hitungGaji(modalKasbon);
+        const detail = [{
+          karyawan: modalKasbon.nama,
+          jumlah: upah-potongan+rework-pot,
+          po: modalKasbon.poTerkait || "PO-0001",
+          status: "Lunas"
+        }];
+        setModalRingkasan({
+          periode: periodeInfo?.label || periode,
+          totalDibayar: detail[0].jumlah,
+          detailKaryawan: detail,
+          sudahDirekap: false
+        });
+      }} onCancel={()=>setModalKasbon(null)}/>}
+
+      {modalRingkasan && (
+        <ModalRingkasanPeriode
+          {...modalRingkasan}
+          onRekap={() => setModalRingkasan(prev=>({...prev, sudahDirekap:true}))}
+          onTutup={() => setModalRingkasan(null)}
+          jurnal={jurnal}
+          setJurnal={setJurnal}
+        />
+      )}
     </div>
   );
 }
@@ -6869,14 +7308,14 @@ const TD_PROD = (i) => ({padding:"10px 14px",fontSize:11,color:C.text,fontFamily
 
 // --- TAB KEUANGAN DATA ---
 const KATEGORI_TRX = [
-  {id:"KTR-001",nama:"Pembelian Bahan Baku",tipe:"keluar",tambahStok:true},
-  {id:"KTR-002",nama:"Upah Karyawan",tipe:"keluar",tambahStok:false},
-  {id:"KTR-003",nama:"Operasional Listrik",tipe:"keluar",tambahStok:false},
-  {id:"KTR-004",nama:"Operasional Rumah",tipe:"keluar",tambahStok:false},
-  {id:"KTR-005",nama:"Penerimaan PO",tipe:"masuk",tambahStok:false},
-  {id:"KTR-006",nama:"Uang Makan",tipe:"keluar",tambahStok:false},
-  {id:"KTR-007",nama:"Pembelian Aksesori",tipe:"keluar",tambahStok:true},
-  {id:"KTR-008",nama:"Pinjaman",tipe:"masuk",tambahStok:false},
+  {id:"KTR-001",nama:"Pembelian Bahan Baku",tipe:"keluar",tambahStok:true, jenis:"direct_bahan"},
+  {id:"KTR-002",nama:"Upah Karyawan",tipe:"keluar",tambahStok:false, jenis:"direct_upah"},
+  {id:"KTR-003",nama:"Operasional Listrik",tipe:"keluar",tambahStok:false, jenis:"overhead"},
+  {id:"KTR-004",nama:"Operasional Rumah",tipe:"keluar",tambahStok:false, jenis:"overhead"},
+  {id:"KTR-005",nama:"Penerimaan PO",tipe:"masuk",tambahStok:false, jenis:"masuk"},
+  {id:"KTR-006",nama:"Uang Makan",tipe:"keluar",tambahStok:false, jenis:"overhead"},
+  {id:"KTR-007",nama:"Pembelian Aksesori",tipe:"keluar",tambahStok:true, jenis:"direct_bahan"},
+  {id:"KTR-008",nama:"Pinjaman",tipe:"masuk",tambahStok:false, jenis:"masuk"},
 ];
 
 const PO_LIST_KEU = [
@@ -6886,10 +7325,10 @@ const PO_LIST_KEU = [
 ];
 
 const initJurnal = [
-  {id:"J001",tanggal:"2025-04-01",idKategori:"KTR-005",keterangan:"Pembayaran DP PO-0001 dari PT. Elysian",idPO:"PO-0001",jumlah:14770000,tipe:"masuk",tambahStok:false,namaKategori:"Penerimaan PO"},
-  {id:"J002",tanggal:"2025-04-01",idKategori:"KTR-001",keterangan:"Beli kain airflow 200 meter",idPO:"PO-0001",jumlah:6000000,tipe:"keluar",tambahStok:true,namaKategori:"Pembelian Bahan Baku",namaItem:"Kain Airflow",qty:200,satuan:"METER",hargaSatuan:30000},
-  {id:"J003",tanggal:"2025-04-02",idKategori:"KTR-003",keterangan:"Tagihan listrik April",idPO:null,jumlah:850000,tipe:"keluar",tambahStok:false,namaKategori:"Operasional Listrik"},
-  {id:"J007",tanggal:"2025-04-05",idKategori:"KTR-005",keterangan:"Pelunasan PO-0002",idPO:"PO-0002",jumlah:23760000,tipe:"masuk",tambahStok:false,namaKategori:"Penerimaan PO"},
+  {id:"J001",tanggal:"2025-04-01",idKategori:"KTR-005",keterangan:"Pembayaran DP PO-0001 dari PT. Elysian",idPO:"PO-0001",jumlah:14770000,tipe:"masuk",tambahStok:false,namaKategori:"Penerimaan PO", jenis:"masuk", noFaktur:null, tagPO:null, detailUpah:null},
+  {id:"J002",tanggal:"2025-04-01",idKategori:"KTR-001",keterangan:"Beli kain airflow 200 meter",idPO:"PO-0001",jumlah:6000000,tipe:"keluar",tambahStok:true,namaKategori:"Pembelian Bahan Baku",namaItem:"Kain Airflow",qty:200,satuan:"METER",hargaSatuan:30000, jenis:"direct_bahan", noFaktur:"INV-001", tagPO:["PO-0001"], detailUpah:null},
+  {id:"J003",tanggal:"2025-04-02",idKategori:"KTR-003",keterangan:"Tagihan listrik April",idPO:null,jumlah:850000,tipe:"keluar",tambahStok:false,namaKategori:"Operasional Listrik", jenis:"overhead", noFaktur:null, tagPO:null, detailUpah:null},
+  {id:"J007",tanggal:"2025-04-05",idKategori:"KTR-005",keterangan:"Pelunasan PO-0002",idPO:"PO-0002",jumlah:23760000,tipe:"masuk",tambahStok:false,namaKategori:"Penerimaan PO", jenis:"masuk", noFaktur:null, tagPO:null, detailUpah:null},
 ];
 
 const TABS_GAJI=[
@@ -6898,7 +7337,7 @@ const TABS_GAJI=[
   {id:"slip",   label:"Slip Gaji",   color:C.cyan},
 ];
 
-function TabPenggajian({defaultTab="rekap"}) {
+function TabPenggajian({defaultTab="rekap", jurnal, setJurnal}) {
   const [activeTab,setActiveTab] = useState(defaultTab);
   return (
     <div>
@@ -6907,7 +7346,7 @@ function TabPenggajian({defaultTab="rekap"}) {
           PENGGAJIAN / {TABS_GAJI.find(t=>t.id===activeTab)?.label.toUpperCase()}
         </div>
       </div>
-      {activeTab==="rekap"  && <RekapGaji/>}
+      {activeTab==="rekap"  && <RekapGaji jurnal={jurnal} setJurnal={setJurnal}/>}
       {activeTab==="kasbon" && <Kasbon/>}
       {activeTab==="slip"   && <SlipGaji/>}
     </div>
@@ -7449,11 +7888,15 @@ function JurnalUmum({jurnal,setJurnal,inventory,setInventory,trxMasuk,setTrxMasu
   const [filterBulan,setFilterBulan] = useState("");
   const [filterTipe,setFilterTipe] = useState("semua");
 
+  const [noFakturInput, setNoFakturInput] = useState("");
+  const [selectedPOs, setSelectedPOs] = useState([]);
+
   const emptyForm = {tanggal:new Date().toISOString().split("T")[0],idKategori:"",keterangan:"",idPO:"",jumlah:"",namaItem:"",qty:"",satuan:"",hargaSatuan:""};
   const [form,setForm] = useState(emptyForm);
   const [notif,setNotif] = useState("");
 
   const kategori = KATEGORI_TRX.find(k=>k.id===form.idKategori);
+  const jenisKategori = kategori?.jenis;
   const perluStok = kategori?.tambahStok;
   const qtyNum = Number(form.qty)||0;
   const hargaNum = Number(form.hargaSatuan)||0;
@@ -7474,6 +7917,10 @@ function JurnalUmum({jurnal,setJurnal,inventory,setInventory,trxMasuk,setTrxMasu
       jumlah:jumlahAuto,
       tipe:kat?.tipe||"keluar",
       tambahStok:kat?.tambahStok||false,
+      jenis: jenisKategori,
+      noFaktur: noFakturInput || null,
+      tagPO: selectedPOs.length > 0 ? selectedPOs : null,
+      detailUpah: null,
       ...(perluStok?{namaItem:form.namaItem,qty:qtyNum,satuan:form.satuan,hargaSatuan:hargaNum}:{}),
     };
     setJurnal(j=>[newJ,...j]);
@@ -7515,6 +7962,8 @@ function JurnalUmum({jurnal,setJurnal,inventory,setInventory,trxMasuk,setTrxMasu
     }
 
     setForm(emptyForm);
+    setNoFakturInput("");
+    setSelectedPOs([]);
     setShowForm(false);
   }
 
@@ -7572,73 +8021,111 @@ function JurnalUmum({jurnal,setJurnal,inventory,setInventory,trxMasuk,setTrxMasu
                   ))}
                 </select>
               </div>
-              <div>
-                <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5}}>Tag PO (opsional)</div>
-                <select value={form.idPO} onChange={e=>setForm(f=>({...f,idPO:e.target.value}))} style={sel}>
-                  <option value="">-- Tanpa PO --</option>
-                  {PO_LIST_KEU.map(p=><option key={p.kode} value={p.kode}>{p.kode} — {p.model}</option>)}
-                </select>
-              </div>
-            </div>
-
-            <div style={{marginBottom:14}}>
-              <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5}}>Keterangan <span style={{color:C.red}}>*</span></div>
-              <input value={form.keterangan} onChange={e=>setForm(f=>({...f,keterangan:e.target.value}))}
-                placeholder="Deskripsi transaksi..." style={{...sel,width:"100%"}}/>
-            </div>
-
-            {perluStok?(
-              <div style={{padding:"12px 14px",background:C.cyanBg,borderRadius:8,border:`1px solid ${C.cyanDim}`,marginBottom:14}}>
-                <div style={{fontSize:9,color:C.cyan,fontFamily:C.mono,fontWeight:700,marginBottom:10,letterSpacing:"0.07em"}}>📦 OTOMATIS TAMBAH STOK & RIWAYAT INVENTORY</div>
-                <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:12}}>
-                  <div>
-                    <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5}}>Nama Item <span style={{color:C.red}}>*</span></div>
-                    <input value={form.namaItem} onChange={e=>setForm(f=>({...f,namaItem:e.target.value}))}
-                      placeholder="Nama bahan/item..." list="inventory-list" style={sel}/>
-                    <datalist id="inventory-list">
-                      {inventory.map(i=><option key={i.id} value={i.nama}/>)}
-                    </datalist>
-                  </div>
-                  <div>
-                    <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5}}>QTY <span style={{color:C.red}}>*</span></div>
-                    <input type="number" min="1" value={form.qty} onChange={e=>setForm(f=>({...f,qty:e.target.value}))}
-                      placeholder="0" style={sel}/>
-                  </div>
-                  <div>
-                    <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5}}>Satuan <span style={{color:C.red}}>*</span></div>
-                    <select value={form.satuan} onChange={e=>setForm(f=>({...f,satuan:e.target.value}))} style={sel}>
-                      <option value="">--</option>
-                      {["METER","PCS","KG","LUSIN"].map(s=><option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5}}>Harga/Satuan <span style={{color:C.red}}>*</span></div>
-                    <input type="number" min="0" value={form.hargaSatuan} onChange={e=>setForm(f=>({...f,hargaSatuan:e.target.value}))}
-                      placeholder="0" style={sel}/>
-                  </div>
+              {jenisKategori !== "direct_upah" && jenisKategori !== "direct_bahan" && (
+                <div>
+                  <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5}}>PO Terkait (opsional)</div>
+                  <select value={form.idPO} onChange={e=>setForm(f=>({...f,idPO:e.target.value}))} style={sel}>
+                    <option value="">-- Tanpa PO --</option>
+                    {PO_LIST_KEU.map(p=><option key={p.kode} value={p.kode}>{p.kode} — {p.model}</option>)}
+                  </select>
                 </div>
-                {qtyNum>0&&hargaNum>0&&(
-                  <div style={{marginTop:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                    <span style={{fontSize:9,color:C.cyan,fontFamily:C.sans}}>Total otomatis: {qtyNum} {form.satuan} × {rp(hargaNum)}</span>
-                    <span style={{fontSize:14,fontWeight:800,color:C.cyan,fontFamily:C.syne}}>{rp(jumlahAuto)}</span>
+              )}
+            </div>
+
+            {jenisKategori === "direct_upah" && (
+              <div style={{padding:"14px",border:`1px solid ${C.yellow}`,borderRadius:8,background:`${C.yellow}15`,color:C.yellow,fontSize:11,lineHeight:1.5,marginBottom:14}}>
+                ⚠ Entri Upah Karyawan hanya bisa dibuat otomatis dari Tab Penggajian → Rekap Gaji → tombol "REKAP KE JURNAL UMUM". Tidak bisa diinput manual.
+              </div>
+            )}
+
+            {jenisKategori !== "direct_upah" && (
+              <>
+                {jenisKategori === "direct_bahan" && (
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,padding:14,background:C.card2,border:`1px dashed ${C.border}`,borderRadius:8,marginBottom:14}}>
+                    <div>
+                      <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5}}>No. Faktur (Opsional)</div>
+                      <input value={noFakturInput} onChange={e=>setNoFakturInput(e.target.value)} placeholder="Misal: INV-XXX-123" style={sel}/>
+                      <div style={{fontSize:8,color:C.textMid,marginTop:4,fontFamily:C.sans}}>* Nomor faktur pembelian, untuk link beberapa item dalam 1 faktur</div>
+                    </div>
+                    <div>
+                      <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5}}>Tag PO</div>
+                      <div style={{background:"#050e1f",border:`1px solid ${C.border2}`,borderRadius:6,padding:"8px",maxHeight:80,overflowY:"auto",display:"flex",flexDirection:"column",gap:4}}>
+                        {PO_LIST_KEU.map(p=>(
+                          <label key={p.kode} style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer",fontSize:10,color:C.text,fontFamily:C.mono}}>
+                            <input type="checkbox" checked={selectedPOs.includes(p.kode)} 
+                                   onChange={e=>{
+                                     if(e.target.checked) setSelectedPOs(prev=>[...prev,p.kode]);
+                                     else setSelectedPOs(prev=>prev.filter(x=>x!==p.kode));
+                                   }}/>
+                            {p.kode}
+                          </label>
+                        ))}
+                      </div>
+                      <div style={{fontSize:8,color:C.textMid,marginTop:4,fontFamily:C.sans}}>* Biaya akan dialokasikan ke PO ini berdasarkan proporsi pemakaian bahan aktual dari data Cutting</div>
+                    </div>
                   </div>
                 )}
-              </div>
-            ):(
-              <div style={{marginBottom:14}}>
-                <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5}}>Jumlah (Rp) <span style={{color:C.red}}>*</span></div>
-                <div style={{display:"flex"}}>
-                  <span style={{padding:"7px 10px",background:C.border,borderRadius:"6px 0 0 6px",fontSize:11,color:C.textSub,fontFamily:C.mono,border:`1px solid ${C.border2}`,borderRight:"none"}}>Rp</span>
-                  <input type="number" min="0" value={form.jumlah} onChange={e=>setForm(f=>({...f,jumlah:e.target.value}))}
-                    placeholder="0" style={{...sel,borderRadius:"0 6px 6px 0"}}/>
+
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5}}>Keterangan <span style={{color:C.red}}>*</span></div>
+                  <input value={form.keterangan} onChange={e=>setForm(f=>({...f,keterangan:e.target.value}))}
+                    placeholder="Deskripsi transaksi..." style={{...sel,width:"100%"}}/>
                 </div>
-              </div>
+
+                {perluStok?(
+                  <div style={{padding:"12px 14px",background:C.cyanBg,borderRadius:8,border:`1px solid ${C.cyanDim}`,marginBottom:14}}>
+                    <div style={{fontSize:9,color:C.cyan,fontFamily:C.mono,fontWeight:700,marginBottom:10,letterSpacing:"0.07em"}}>📦 OTOMATIS TAMBAH STOK & RIWAYAT INVENTORY</div>
+                    <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:12}}>
+                      <div>
+                        <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5}}>Nama Item <span style={{color:C.red}}>*</span></div>
+                        <input value={form.namaItem} onChange={e=>setForm(f=>({...f,namaItem:e.target.value}))}
+                          placeholder="Nama bahan/item..." list="inventory-list" style={sel}/>
+                        <datalist id="inventory-list">
+                          {inventory.map(i=><option key={i.id} value={i.nama}/>)}
+                        </datalist>
+                      </div>
+                      <div>
+                        <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5}}>QTY <span style={{color:C.red}}>*</span></div>
+                        <input type="number" min="1" value={form.qty} onChange={e=>setForm(f=>({...f,qty:e.target.value}))}
+                          placeholder="0" style={sel}/>
+                      </div>
+                      <div>
+                        <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5}}>Satuan <span style={{color:C.red}}>*</span></div>
+                        <select value={form.satuan} onChange={e=>setForm(f=>({...f,satuan:e.target.value}))} style={sel}>
+                          <option value="">--</option>
+                          {["METER","PCS","KG","LUSIN"].map(s=><option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5}}>Harga/Satuan <span style={{color:C.red}}>*</span></div>
+                        <input type="number" min="0" value={form.hargaSatuan} onChange={e=>setForm(f=>({...f,hargaSatuan:e.target.value}))}
+                          placeholder="0" style={sel}/>
+                      </div>
+                    </div>
+                    {qtyNum>0&&hargaNum>0&&(
+                      <div style={{marginTop:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                        <span style={{fontSize:9,color:C.cyan,fontFamily:C.sans}}>Total otomatis: {qtyNum} {form.satuan} × {rp(hargaNum)}</span>
+                        <span style={{fontSize:14,fontWeight:800,color:C.cyan,fontFamily:C.syne}}>{rp(jumlahAuto)}</span>
+                      </div>
+                    )}
+                  </div>
+                ):(
+                  <div style={{marginBottom:14}}>
+                    <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5}}>Jumlah (Rp) <span style={{color:C.red}}>*</span></div>
+                    <div style={{display:"flex"}}>
+                      <span style={{padding:"7px 10px",background:C.border,borderRadius:"6px 0 0 6px",fontSize:11,color:C.textSub,fontFamily:C.mono,border:`1px solid ${C.border2}`,borderRight:"none"}}>Rp</span>
+                      <input type="number" min="0" value={form.jumlah} onChange={e=>setForm(f=>({...f,jumlah:e.target.value}))}
+                        placeholder="0" style={{...sel,borderRadius:"0 6px 6px 0"}}/>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
               <BtnKeu onClick={()=>{setShowForm(false);setForm(emptyForm);}} outline>BATAL</BtnKeu>
               <BtnKeu onClick={simpanJurnal}
-                disabled={!form.idKategori||!form.keterangan||jumlahAuto<=0||(perluStok&&(!form.namaItem||!form.qty||!form.satuan))}
+                disabled={!form.idKategori || jenisKategori === "direct_upah" || !form.keterangan || jumlahAuto<=0 || (perluStok&&(!form.namaItem||!form.qty||!form.satuan))}
                 color={kategori?.tipe==="masuk"?"green":"red"}>
                 {kategori?.tipe==="masuk"?"↑ SIMPAN MASUK":"↓ SIMPAN KELUAR"}
               </BtnKeu>
@@ -7667,7 +8154,7 @@ function JurnalUmum({jurnal,setJurnal,inventory,setInventory,trxMasuk,setTrxMasu
         <div style={{overflowX:"auto"}}>
           <table style={{width:"100%",borderCollapse:"collapse",minWidth:720}}>
             <thead><tr style={{background:"#0e204055"}}>
-              {["Tanggal","Kategori","Keterangan","PO","Item/Stok","Jumlah","Tipe"].map(h=>(
+              {["Tanggal","Kategori","Jenis","Keterangan","PO","Item/Stok","Jumlah","Tipe"].map(h=>(
                 <th key={h} style={{...TH_KEU,textAlign:h==="Jumlah"?"right":TH_KEU.textAlign}}>{h}</th>
               ))}
             </tr></thead>
@@ -7679,9 +8166,24 @@ function JurnalUmum({jurnal,setJurnal,inventory,setInventory,trxMasuk,setTrxMasu
                   <td style={TD_KEU(i)}>
                     <span style={{fontSize:10,fontWeight:600,color:j.tambahStok?C.cyan:C.text}}>{j.namaKategori}</span>
                     {j.tambahStok&&<span style={{fontSize:8,color:C.cyan,fontFamily:C.mono,marginLeft:4}}>📦</span>}
+                    {j.noFaktur && <div style={{fontSize:8,color:C.textMid,fontFamily:C.mono,marginTop:4}}>Faktur: {j.noFaktur}</div>}
+                  </td>
+                  <td style={TD_KEU(i)}>
+                    <span style={{padding:"3px 8px",borderRadius:99,fontSize:9,fontWeight:700,fontFamily:C.mono,whiteSpace:"nowrap",
+                       background:j.jenis==="direct_bahan"?`${C.green}20`:j.jenis==="direct_upah"?`${C.purple}20`:j.jenis==="masuk"?`${C.cyan}20`:`${C.orange}20`,
+                       color:j.jenis==="direct_bahan"?C.green:j.jenis==="direct_upah"?C.purple:j.jenis==="masuk"?C.cyan:C.orange}}>
+                      {(j.jenis||"").toUpperCase().replace("_"," ")}
+                    </span>
                   </td>
                   <td style={TD_KEU(i)}><span style={{fontSize:10,color:C.textSub}}>{j.keterangan}</span></td>
-                  <td style={TD_KEU(i)}>{j.idPO?<span style={{fontFamily:C.mono,fontSize:10,color:C.blue,fontWeight:700}}>{j.idPO}</span>:<span style={{color:C.textMid}}>—</span>}</td>
+                  <td style={TD_KEU(i)}>
+                    {j.idPO ? <span style={{fontFamily:C.mono,fontSize:10,color:C.blue,fontWeight:700}}>{j.idPO}</span> : 
+                     j.tagPO?.length>0 ? (
+                      <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+                        {j.tagPO.map(p => <span key={p} style={{background:C.card2,border:`1px solid ${C.border}`,padding:"2px 6px",borderRadius:4,fontSize:9,fontFamily:C.mono,color:C.textSub}}>{p}</span>)}
+                      </div>
+                     ) : <span style={{color:C.textMid}}>—</span>}
+                  </td>
                   <td style={TD_KEU(i)}>
                     {j.tambahStok&&j.namaItem?(
                       <div>
@@ -7755,24 +8257,105 @@ const REJECT_DATA=[
 ];
 const BULAN_LIST=["2025-03","2025-04"];
 
-function hitungOverheadPO(kodePO,bulan){
-  const po=PO_DATA.find(p=>p.kode===kodePO);if(!po) return 0;
-  const overheads=OVERHEAD_PER_BULAN[bulan]||[];if(!overheads.length) return 0;
-  const totalOH=overheads.reduce((s,o)=>s+o.jumlah,0);
-  const totalPCS=PO_DATA.reduce((s,p)=>s+(p.pcsKirimPerBulan[bulan]||0),0);
-  if(!totalPCS) return 0;
-  return Math.round(totalOH*((po.pcsKirimPerBulan[bulan]||0)/totalPCS));
-}
-function totalOverheadPO(kodePO){return BULAN_LIST.reduce((s,b)=>s+hitungOverheadPO(kodePO,b),0);}
-function totalRealisasiPO(kodePO){const po=PO_DATA.find(p=>p.kode===kodePO);if(!po) return 0;return(po.biayaBahan||0)+(po.biayaUpah||0)+totalOverheadPO(kodePO);}
+// --- HELPER CALCULATIONS (TAHAP 5) ---
 
-function LaporanPerBulan() {
+function hitungBiayaBahanPO(kodePO, pemakaianBahan, jurnal) {
+  const pemakaianPO = pemakaianBahan.filter(p => p.po === kodePO);
+  const jurnalBahan = jurnal.filter(j => 
+    j.jenis === "direct_bahan" && 
+    j.tagPO && j.tagPO.includes(kodePO)
+  );
+  const totalNilaiBeli = jurnalBahan.reduce((s, j) => s + j.jumlah, 0);
+  
+  // Jika ada totalNilaiBeli di jurnal, gunakan itu (karena sudah ditag ke PO)
+  // Ini fallback ke dummy jika jurnal kosong
+  if (totalNilaiBeli > 0) return Math.round(totalNilaiBeli);
+  
+  // Analisis dari pemakaianBahan (data Cutting)
+  const totalDariCutting = pemakaianPO.reduce((s, p) => s + (p.qtyPcs * p.pemakaianPerPcs * p.hargaBahan), 0);
+  if (totalDariCutting > 0) return Math.round(totalDariCutting);
+
+  // Fallback ke PO_DATA dummy
+  return PO_DATA.find(p=>p.kode===kodePO)?.biayaBahan || 0;
+}
+
+function hitungBiayaUpahPO(kodePO, jurnal) {
+  const upahReal = jurnal
+    .filter(j => j.jenis === "direct_upah" && j.detailUpah)
+    .reduce((total, j) => {
+      const upahUntukPO = j.detailUpah
+        .filter(d => d.po === kodePO)
+        .reduce((s, d) => s + d.jumlah, 0);
+      return total + upahUntukPO;
+    }, 0);
+  
+  if (upahReal > 0) return upahReal;
+  
+  // Fallback ke PO_DATA dummy
+  return PO_DATA.find(p=>p.kode===kodePO)?.biayaUpah || 0;
+}
+
+function hitungOverheadPOBulan(kodePO, bulan, jurnal, artikelDB) {
+  const overheadBulan = jurnal.filter(j => 
+    j.jenis === "overhead" && 
+    j.tanggal && j.tanggal.startsWith(bulan)
+  );
+  
+  let listOH = overheadBulan.length > 0 ? overheadBulan : (OVERHEAD_PER_BULAN[bulan] || []);
+  if (listOH.length === 0) return 0;
+  
+  const totalOH = listOH.reduce((s, j) => s + (j.jumlah || 0), 0);
+  
+  // Hitung total PCS terkirim dari artikelDB
+  const semuaPO = Object.keys(artikelDB);
+  const totalPCSTerkirimBulan = semuaPO.reduce((total, po) => {
+    const artikel = artikelDB[po] || [];
+    return total + artikel.reduce((s, a) => s + (a.kirim || 0), 0);
+  }, 0);
+  
+  // Fallback ke PO_DATA dummy jika artikelDB kosong/tidak ada kiriman
+  if (totalPCSTerkirimBulan === 0) {
+    const totalPCSDummy = PO_DATA.reduce((s,p)=>s+(p.pcsKirimPerBulan[bulan]||0),0);
+    const pcsKirimPO = PO_DATA.find(p=>p.kode===kodePO)?.pcsKirimPerBulan[bulan] || 0;
+    if (totalPCSDummy === 0) return 0;
+    return Math.round(totalOH * pcsKirimPO / totalPCSDummy);
+  }
+  
+  const artikelPO = artikelDB[kodePO] || [];
+  const pcsKirimPO = artikelPO.reduce((s, a) => s + (a.kirim || 0), 0);
+  
+  return Math.round(totalOH * pcsKirimPO / totalPCSTerkirimBulan);
+}
+
+function hitungTotalOverheadPOReal(kodePO, jurnal, artikelDB) {
+  return BULAN_LIST.reduce((total, bulan) => 
+    total + hitungOverheadPOBulan(kodePO, bulan, jurnal, artikelDB), 0
+  );
+}
+
+function LaporanPerBulan({jurnal, pemakaianBahan, artikelDB}) {
   const [bulan,setBulan]=useState("2025-04");
-  const overheads=OVERHEAD_PER_BULAN[bulan]||[];
+  
+  let overheads = jurnal.filter(j => j.jenis === "overhead" && j.tanggal && j.tanggal.startsWith(bulan));
+  if (overheads.length === 0) overheads = OVERHEAD_PER_BULAN[bulan] || [];
+
   const totalOH=overheads.reduce((s,o)=>s+o.jumlah,0);
-  const totalPCSBulan=PO_DATA.reduce((s,p)=>s+(p.pcsKirimPerBulan[bulan]||0),0);
+
+  // Hitung total PCS terkirim
+  const semuaPO = Object.keys(artikelDB);
+  let totalPCSBulan = semuaPO.reduce((total, po) => {
+    const artikel = artikelDB[po] || [];
+    return total + artikel.reduce((s, a) => s + (a.kirim || 0), 0);
+  }, 0);
+  if (totalPCSBulan === 0) {
+    totalPCSBulan = PO_DATA.reduce((s,p)=>s+(p.pcsKirimPerBulan[bulan]||0),0);
+  }
+
   const ohPerPCS=totalPCSBulan>0?Math.round(totalOH/totalPCSBulan):0;
-  const poAktif=PO_DATA.filter(p=>p.bulanAktif.includes(bulan));
+  const poAktif = totalPCSBulan > 0 ? PO_DATA.filter(po => {
+    const pcs = artikelDB[po.kode]?.reduce((s, a) => s + (a.kirim || 0), 0) || po.pcsKirimPerBulan[bulan] || 0;
+    return pcs > 0;
+  }) : PO_DATA.filter(p=>p.bulanAktif.includes(bulan));
   const bulanLabel=(b)=>new Date(b+"-01").toLocaleDateString("id-ID",{month:"long",year:"numeric"});
   return (
     <div>
@@ -7822,12 +8405,26 @@ function LaporanPerBulan() {
             <thead><tr style={{background:"#0e204055"}}>{["PO","Model","HPP Est","Bahan","Upah","Overhead","Total Real","Gap","Status"].map(h=>(<th key={h} style={{...TH_LAP,textAlign:["HPP Est","Bahan","Upah","Overhead","Total Real","Gap"].includes(h)?"right":TH_LAP.textAlign}}>{h}</th>))}</tr></thead>
             <tbody>
               {poAktif.map((po,i)=>{
-                const pcs=po.pcsKirimPerBulan[bulan]||0;const rasio=po.totalPCS>0?pcs/po.totalPCS:0;
-                const bhn=Math.round((po.biayaBahan||0)*rasio);const upah=Math.round((po.biayaUpah||0)*rasio);const oh=hitungOverheadPO(po.kode,bulan);const hpp=Math.round((po.hppEst||0)*rasio);const real=bhn+upah+oh;const gap=real-hpp;const boncos=gap>0;
+                const pcs = artikelDB[po.kode]?.reduce((s, a) => s + (a.kirim || 0), 0) || po.pcsKirimPerBulan[bulan] || 0;
+                const rasio = po.totalPCS>0?pcs/po.totalPCS:0;
+                
+                const bhnTotal = hitungBiayaBahanPO(po.kode, pemakaianBahan, jurnal);
+                const upahTotal = hitungBiayaUpahPO(po.kode, jurnal);
+                
+                const bhn=Math.round(bhnTotal*rasio);
+                const upah=Math.round(upahTotal*rasio);
+                const oh=hitungOverheadPOBulan(po.kode, bulan, jurnal, artikelDB);
+                
+                const hpp=Math.round((po.hppEst||0)*rasio);
+                const real=bhn+upah+oh;
+                const gap=real-hpp;
+                const boncos=gap>0;
+                
+                const prop=totalPCSBulan>0?((pcs/totalPCSBulan)*100).toFixed(1):0;
                 return(
                   <tr key={po.kode} style={{borderBottom:`1px solid ${C.border}`,background:boncos?`${C.red}06`:i%2===0?C.card:C.card2}}>
                     <td style={TD_LAP(i)}><span style={{fontFamily:C.mono,fontWeight:700,color:C.cyan}}>{po.kode}</span></td>
-                    <td style={TD_LAP(i)}><span style={{fontWeight:600}}>{po.model}</span><div style={{fontSize:8,color:C.textSub}}>{pcs} pcs bulan ini</div></td>
+                    <td style={TD_LAP(i)}><span style={{fontWeight:600}}>{po.model}</span><div style={{fontSize:8,color:C.textSub}}>{pcs} pcs bulan ini ({prop}%)</div></td>
                     <td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,color:C.textSub}}>{rp(hpp)}</span></td>
                     <td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,color:C.blue}}>{rp(bhn)}</span></td>
                     <td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,color:C.purple}}>{rp(upah)}</span></td>
@@ -7847,14 +8444,34 @@ function LaporanPerBulan() {
   );
 }
 
-function LaporanPerPO() {
+function LaporanPerPO({jurnal, pemakaianBahan, artikelDB}) {
   const [selectedPO,setSelectedPO]=useState("PO-0001");
   const [showPemakaian,setShowPemakaian]=useState(false);
   const po=PO_DATA.find(p=>p.kode===selectedPO);
-  const totalOH=totalOverheadPO(selectedPO);const totalReal=totalRealisasiPO(selectedPO);const gap=totalReal-po.hppEst;
+  
+  const bBahan = hitungBiayaBahanPO(selectedPO, pemakaianBahan, jurnal);
+  const bUpah = hitungBiayaUpahPO(selectedPO, jurnal);
+  const totalOH=hitungTotalOverheadPOReal(selectedPO, jurnal, artikelDB);
+  
+  const totalReal = bBahan + bUpah + totalOH;
+  const gap=totalReal-po.hppEst;
   const marginEst=po.totalHargaJual-po.hppEst;const marginReal=po.totalHargaJual-totalReal;
-  const pemakaianPO=PEMAKAIAN_BAHAN.filter(p=>p.po===selectedPO);
-  const ohPerBulan=BULAN_LIST.map(b=>({bulan:b,label:new Date(b+"-01").toLocaleDateString("id-ID",{month:"long",year:"numeric"}),pcsKirim:po.pcsKirimPerBulan[b]||0,alokasi:hitungOverheadPO(selectedPO,b),overheads:OVERHEAD_PER_BULAN[b]||[]})).filter(b=>po.bulanAktif.includes(b.bulan));
+  
+  const pemakaianAktual = pemakaianBahan.filter(p=>p.po===selectedPO);
+  
+  const ohPerBulan=BULAN_LIST.map(b=>{
+    const pcs = artikelDB[selectedPO]?.reduce((s, a) => s + (a.kirim || 0), 0) || po.pcsKirimPerBulan[b] || 0;
+    let ohs = jurnal.filter(j => j.jenis === "overhead" && j.tanggal && j.tanggal.startsWith(b));
+    if (ohs.length === 0) ohs = OVERHEAD_PER_BULAN[b] || [];
+    
+    return {
+      bulan: b,
+      label: new Date(b+"-01").toLocaleDateString("id-ID",{month:"long",year:"numeric"}),
+      pcsKirim: pcs,
+      alokasi: hitungOverheadPOBulan(selectedPO, b, jurnal, artikelDB),
+      overheads: ohs
+    }
+  }).filter(b => b.pcsKirim > 0 || po.bulanAktif.includes(b.bulan));
   return (
     <div>
       <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
@@ -7883,7 +8500,7 @@ function LaporanPerPO() {
       <Panel title="BREAKDOWN BIAYA REALISASI" accent={C.yellow}>
         <div style={{padding:"16px 20px"}}>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12,marginBottom:16}}>
-            {[{label:"Biaya Bahan Baku",value:po.biayaBahan||0,color:C.blue,icon:"🧵",desc:"dari data cutting"},{label:"Biaya Upah",value:po.biayaUpah||0,color:C.purple,icon:"👷",desc:"dari rekap gaji terbayar"},{label:"Overhead Dialokasi",value:totalOH,color:C.orange,icon:"⚡",desc:"dibagi proporsional PCS"}].map(k=>{
+            {[{label:"Biaya Bahan Baku",value:bBahan,color:C.blue,icon:"🧵",desc:"dari data cutting/jurnal"},{label:"Biaya Upah",value:bUpah,color:C.purple,icon:"👷",desc:"dari rekap gaji terbayar"},{label:"Overhead Dialokasi",value:totalOH,color:C.orange,icon:"⚡",desc:"dibagi proporsional PCS"}].map(k=>{
               const p=totalReal>0?((k.value/totalReal)*100).toFixed(1):0;
               return(<div key={k.label} style={{background:"#050e1f",borderRadius:10,padding:"14px 16px",border:`1px solid ${k.color}33`}}>
                 <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{fontSize:11,color:C.textSub,fontFamily:C.sans}}>{k.icon} {k.label}</span><span style={{fontSize:9,color:k.color,fontFamily:C.mono,fontWeight:700}}>{p}%</span></div>
@@ -7894,7 +8511,7 @@ function LaporanPerPO() {
             })}
           </div>
           <div style={{background:"#050e1f",borderRadius:8,border:`1px solid ${C.border}`,overflow:"hidden"}}>
-            {[{label:"Biaya Bahan Baku",value:po.biayaBahan||0,color:C.blue},{label:"Biaya Upah (terbayar)",value:po.biayaUpah||0,color:C.purple},{label:"Total Overhead Dialokasi",value:totalOH,color:C.orange}].map((k,i)=>(
+            {[{label:"Biaya Bahan Baku",value:bBahan,color:C.blue},{label:"Biaya Upah (terbayar)",value:bUpah,color:C.purple},{label:"Total Overhead Dialokasi",value:totalOH,color:C.orange}].map((k,i)=>(
               <div key={k.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 16px",borderBottom:`1px solid ${C.border}`,background:i%2===0?"transparent":"#070f1f"}}>
                 <span style={{fontSize:11,color:C.textSub,fontFamily:C.sans}}>{k.label}</span>
                 <span style={{fontFamily:C.mono,fontWeight:700,color:k.color}}>{rp(k.value)}</span>
@@ -7930,58 +8547,85 @@ function LaporanPerPO() {
         </div>
       </Panel>
       <Panel title="PEMAKAIAN BAHAN DARI CUTTING" action={showPemakaian?"▾ TUTUP":"▸ DETAIL"} onAction={()=>setShowPemakaian(!showPemakaian)} accent={C.blue}>
-        {showPemakaian&&(pemakaianPO.length>0?(
+        {showPemakaian&&(pemakaianAktual.length>0?(
           <div style={{overflowX:"auto"}}>
             <table style={{width:"100%",borderCollapse:"collapse",minWidth:580}}>
-              <thead><tr style={{background:"#0e204055"}}>{["Artikel","Model/Size","QTY","Pemakaian/Pcs","Total Pakai","Harga Bahan","Total Biaya"].map(h=>(<th key={h} style={{...TH_LAP,textAlign:["QTY","Total Pakai","Harga Bahan","Total Biaya"].includes(h)?"right":TH_LAP.textAlign}}>{h}</th>))}</tr></thead>
+              <thead><tr style={{background:"#0e204055"}}>{["Artikel","QTY Pcs","Meter Pakai","Total Pakai","Harga Bahan","Total Biaya"].map(h=>(<th key={h} style={{...TH_LAP,textAlign:["QTY Pcs","Meter Pakai","Total Pakai","Harga Bahan","Total Biaya"].includes(h)?"right":TH_LAP.textAlign}}>{h}</th>))}</tr></thead>
               <tbody>
-                {pemakaianPO.map((p,i)=>{const tp=p.qtyPcs*p.pemakaianPerPcs;const tb=tp*p.hargaBahan;return(
-                  <tr key={p.artikel} style={{borderBottom:`1px solid ${C.border}`}}>
-                    <td style={TD_LAP(i)}><span style={{fontWeight:600}}>{p.artikel}</span></td>
-                    <td style={TD_LAP(i)}><span style={{fontFamily:C.mono,fontSize:10,color:C.blue}}>{p.modelSize}</span></td>
-                    <td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,fontWeight:700}}>{p.qtyPcs}</span></td>
-                    <td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,color:C.textSub}}>{p.pemakaianPerPcs} {p.satuan}</span></td>
-                    <td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,fontWeight:700,color:C.cyan}}>{tp.toFixed(2)} {p.satuan}</span></td>
-                    <td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,color:C.textSub}}>{rp(p.hargaBahan)}/{p.satuan}</span></td>
-                    <td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,fontWeight:700,color:C.green}}>{rp(tb)}</span></td>
+                {pemakaianAktual.map((p,i)=>{
+                  const tp = p.pemakaianKainMeter;
+                  const unitPrice = p.hargaBahan || 0; // fallback if needed
+                  const total = tp * unitPrice;
+                  return(
+                  <tr key={i} style={{borderBottom:`1px solid ${C.border}`}}>
+                    <td style={TD_LAP(i)}><span style={{fontWeight:600}}>{p.artikelNama || p.skuKlien}</span></td>
+                    <td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,fontWeight:700}}>{p.qtyPcs || "—"}</span></td>
+                    <td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,color:C.textSub}}>{p.pemakaianKainMeter||0} m</span></td>
+                    <td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,fontWeight:700,color:C.cyan}}>{tp.toFixed(2)} m</span></td>
+                    <td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,color:C.textSub}}>{rp(unitPrice)}</span></td>
+                    <td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,fontWeight:700,color:C.green}}>{rp(total)}</span></td>
                   </tr>
                 );})}
               </tbody>
-              <tfoot><tr style={{background:"#0e204055",borderTop:`2px solid ${C.border}`}}><td colSpan={5} style={{padding:"10px 14px",fontSize:10,fontWeight:700,color:C.textSub,fontFamily:C.sans}}>TOTAL BIAYA BAHAN</td><td/><td style={{padding:"10px 14px",textAlign:"right",fontFamily:C.mono,fontWeight:800,color:C.green}}>{rp(pemakaianPO.reduce((s,p)=>s+p.qtyPcs*p.pemakaianPerPcs*p.hargaBahan,0))}</td></tr></tfoot>
+              <tfoot><tr style={{background:"#0e204055",borderTop:`2px solid ${C.border}`}}><td colSpan={5} style={{padding:"10px 14px",fontSize:10,fontWeight:700,color:C.textSub,fontFamily:C.sans}}>TOTAL ESTIMASI BIAYA BAHAN</td><td style={{padding:"10px 14px",textAlign:"right",fontFamily:C.mono,fontWeight:800,color:C.green}}>{rp(pemakaianAktual.reduce((s,p)=>s+(p.pemakaianKainMeter*p.hargaBahan),0))}</td></tr></tfoot>
             </table>
           </div>
-        ):<div style={{padding:"20px",textAlign:"center",fontSize:10,color:C.textMid,fontFamily:C.sans}}>Belum ada data pemakaian bahan dari Cutting untuk PO ini.</div>)}
+        ) : (
+          <div style={{padding:20, textAlign:"center"}}>
+            <div style={{fontSize:11, color:C.textSub}}>Tidak ada data pemakaian bahan aktual untuk PO ini. Menampilkan data estimasi budget.</div>
+            <div style={{fontSize:14, fontWeight:700, marginTop:8, color:C.blue}}>{rp(po.biayaBahan)}</div>
+          </div>
+        ))}
       </Panel>
     </div>
   );
 }
 
-function LaporanGaji() {
-  const totalGaji=GAJI_REKAP.reduce((s,p)=>s+p.totalDibayar,0);
-  const totalPerPO={};GAJI_REKAP.forEach(p=>p.detail.forEach(d=>{if(!totalPerPO[d.po])totalPerPO[d.po]=0;totalPerPO[d.po]+=d.upah;}));
+function LaporanGaji({jurnal}) {
+  const listUpah = jurnal.filter(j => j.jenis === "direct_upah" && j.detailUpah);
+  const totalGaji = listUpah.reduce((s,j)=>s+j.jumlah,0);
+  
+  const totalPerPO = {};
+  listUpah.forEach(j => {
+    j.detailUpah.forEach(d => {
+      if(!totalPerPO[d.po]) totalPerPO[d.po] = 0;
+      totalPerPO[d.po] += d.jumlah;
+    });
+  });
+
   return (
     <div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:16}}>
-        {[{label:"Total Gaji Dibayar",value:rp(totalGaji),color:C.green},{label:"Periode Tercatat",value:GAJI_REKAP.length+" periode",color:C.cyan},{label:"Total Karyawan",value:GAJI_REKAP.reduce((s,p)=>s+p.detail.length,0)+" orang",color:C.purple}].map(k=>(
+        {[{label:"Total Gaji Dibayar",value:rp(totalGaji),color:C.green},{label:"Periode Tercatat",value:listUpah.length+" periode",color:C.cyan},{label:"Total Karyawan",value:[...new Set(listUpah.flatMap(j=>j.detailUpah.map(d=>d.karyawan)))].length+" orang",color:C.purple}].map(k=>(
           <div key={k.label} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 16px",borderLeft:`3px solid ${k.color}`}}>
             <div style={{fontSize:8,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:3}}>{k.label}</div>
             <div style={{fontSize:16,fontWeight:800,color:k.color,fontFamily:C.syne}}>{k.value}</div>
           </div>
         ))}
       </div>
-      <Panel title="ALOKASI UPAH PER PO" accent={C.purple}>
-        <div style={{overflowX:"auto"}}>
-          <table style={{width:"100%",borderCollapse:"collapse"}}>
-            <thead><tr style={{background:"#0e204055"}}>{["PO","Model","Total Upah","% dari Total"].map(h=>(<th key={h} style={{...TH_LAP,textAlign:["Total Upah","% dari Total"].includes(h)?"right":TH_LAP.textAlign}}>{h}</th>))}</tr></thead>
-            <tbody>{Object.entries(totalPerPO).map(([po,total],i)=>{const pd=PO_DATA.find(p=>p.kode===po);return(<tr key={po} style={{borderBottom:`1px solid ${C.border}`}}><td style={TD_LAP(i)}><span style={{fontFamily:C.mono,fontWeight:700,color:C.cyan}}>{po}</span></td><td style={TD_LAP(i)}><span style={{fontWeight:600}}>{pd?.model||"—"}</span></td><td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,fontWeight:700,color:C.purple}}>{rp(total)}</span></td><td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,color:C.textSub}}>{pct(total,totalGaji)}</span></td></tr>);})}</tbody>
-          </table>
+      
+      {listUpah.length === 0 && (
+        <div style={{padding:40, textAlign:"center", background:C.card, borderRadius:12, border:`1px dashed ${C.border}`, color:C.textSub}}>
+          Belum ada data REKAP Gaji di Jurnal Umum. Silakan lakukan pembayaran di Tab Penggajian.
         </div>
-      </Panel>
-      {GAJI_REKAP.map(p=>(<Panel key={p.periodeId} title={`REKAP — ${p.periode}`} accent={C.green}>
+      )}
+
+      {listUpah.length > 0 && (
+        <Panel title="ALOKASI UPAH PER PO (AKTUAL)" accent={C.purple}>
+          <div style={{overflowX:"auto"}}>
+            <table style={{width:"100%",borderCollapse:"collapse"}}>
+              <thead><tr style={{background:"#0e204055"}}>{["PO","Model","Total Upah","% dari Total"].map(h=>(<th key={h} style={{...TH_LAP,textAlign:["Total Upah","% dari Total"].includes(h)?"right":TH_LAP.textAlign}}>{h}</th>))}</tr></thead>
+              <tbody>{Object.entries(totalPerPO).map(([po,total],i)=>{const pd=PO_DATA.find(p=>p.kode===po);return(<tr key={po} style={{borderBottom:`1px solid ${C.border}`}}><td style={TD_LAP(i)}><span style={{fontFamily:C.mono,fontWeight:700,color:C.cyan}}>{po}</span></td><td style={TD_LAP(i)}><span style={{fontWeight:600}}>{pd?.model||"—"}</span></td><td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,fontWeight:700,color:C.purple}}>{rp(total)}</span></td><td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,color:C.textSub}}>{pct(total,totalGaji)}</span></td></tr>);})}</tbody>
+            </table>
+          </div>
+        </Panel>
+      )}
+
+      {listUpah.map(j=>(<Panel key={j.id} title={`REKAP — ${j.keterangan}`} accent={C.green}>
         <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
           <thead><tr style={{background:"#0e204055"}}>{["Karyawan","PO","Upah"].map(h=>(<th key={h} style={{...TH_LAP,textAlign:h==="Upah"?"right":TH_LAP.textAlign}}>{h}</th>))}</tr></thead>
-          <tbody>{p.detail.map((d,i)=>(<tr key={d.karyawan} style={{borderBottom:`1px solid ${C.border}`}}><td style={TD_LAP(i)}><span style={{fontWeight:600}}>{d.karyawan}</span></td><td style={TD_LAP(i)}><span style={{fontFamily:C.mono,fontSize:10,color:C.blue,fontWeight:700}}>{d.po}</span></td><td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,fontWeight:700,color:C.green}}>{rp(d.upah)}</span></td></tr>))}</tbody>
-          <tfoot><tr style={{background:"#0e204055",borderTop:`2px solid ${C.border}`}}><td colSpan={2} style={{padding:"10px 14px",fontSize:10,fontWeight:700,color:C.textSub,fontFamily:C.sans}}>TOTAL</td><td style={{padding:"10px 14px",textAlign:"right",fontFamily:C.mono,fontWeight:800,color:C.green}}>{rp(p.totalDibayar)}</td></tr></tfoot>
+          <tbody>{j.detailUpah.map((d,i)=>(<tr key={i} style={{borderBottom:`1px solid ${C.border}`}}><td style={TD_LAP(i)}><span style={{fontWeight:600}}>{d.karyawan}</span></td><td style={TD_LAP(i)}><span style={{fontFamily:C.mono,fontSize:10,color:C.blue,fontWeight:700}}>{d.po}</span></td><td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,fontWeight:700,color:C.green}}>{rp(d.jumlah)}</span></td></tr>))}</tbody>
+          <tfoot><tr style={{background:"#0e204055",borderTop:`2px solid ${C.border}`}}><td colSpan={2} style={{padding:"10px 14px",fontSize:10,fontWeight:700,color:C.textSub,fontFamily:C.sans}}>TOTAL</td><td style={{padding:"10px 14px",textAlign:"right",fontFamily:C.mono,fontWeight:800,color:C.green}}>{rp(j.jumlah)}</td></tr></tfoot>
         </table></div>
       </Panel>))}
     </div>
@@ -8458,6 +9102,11 @@ function AuditLog() {
   );
 }
 
+const initPemakaianBahan = [
+  {po:"PO-0001", skuKlien:"ely289", artikelNama:"Airflow Black S", pemakaianKainMeter:1.2, pemakaianBeratGram:420, inputOleh:"Admin", waktuInput:"2025-04-01 08:30"},
+  {po:"PO-0001", skuKlien:"ely290", artikelNama:"Airflow Black M", pemakaianKainMeter:1.3, pemakaianBeratGram:450, inputOleh:"Admin", waktuInput:"2025-04-01 08:35"},
+];
+
 // --- MAIN APP ---
 export default function StitchlixApp() {
   const [activeNav, setActiveNav] = useState("dashboard");
@@ -8470,6 +9119,7 @@ export default function StitchlixApp() {
   const [trxKeluar, setTrxKeluar] = useState(initTrxKeluar);
   const [trxMasuk, setTrxMasuk] = useState(initTrxMasuk);
   const [jurnal, setJurnal] = useState(initJurnal);
+  const [pemakaianBahan, setPemakaianBahan] = useState(initPemakaianBahan);
 
   function navTo(navId, subLabel) {
     setActiveNav(navId);
@@ -8495,9 +9145,9 @@ export default function StitchlixApp() {
     }
 
     if (activeNav === "penggajian") {
-      if (activeSub === "Rekap Gaji") return <TabPenggajian key="p_rekap" defaultTab="rekap" />;
-      if (activeSub === "Kasbon")     return <TabPenggajian key="p_kasbon" defaultTab="kasbon" />;
-      if (activeSub === "Slip Gaji")  return <TabPenggajian key="p_slip" defaultTab="slip" />;
+      if (activeSub === "Rekap Gaji") return <TabPenggajian key="p_rekap" defaultTab="rekap" jurnal={jurnal} setJurnal={setJurnal}/>;
+      if (activeSub === "Kasbon")     return <TabPenggajian key="p_kasbon" defaultTab="kasbon" jurnal={jurnal} setJurnal={setJurnal}/>;
+      if (activeSub === "Slip Gaji")  return <TabPenggajian key="p_slip" defaultTab="slip" jurnal={jurnal} setJurnal={setJurnal}/>;
     }
 
     if (activeNav === "inventory") {
@@ -8513,14 +9163,14 @@ export default function StitchlixApp() {
 
     if (activeNav === "produksi") {
       if (activeSub === "Input PO") return <InputPO />;
-      if (activeSub === "Cutting") return <TabProduksi key="cutting" defaultTab="cutting" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} />;
-      if (activeSub === "Jahit") return <TabProduksi key="jahit" defaultTab="jahit" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} />;
-      if (activeSub === "Lubang Kancing") return <TabProduksi key="lkancing" defaultTab="lkancing" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} />;
-      if (activeSub === "Buang Benang") return <TabProduksi key="bbenang" defaultTab="bbenang" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} />;
-      if (activeSub === "QC") return <TabProduksi key="qc" defaultTab="qc" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} />;
-      if (activeSub === "Steam") return <TabProduksi key="steam" defaultTab="steam" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} />;
-      if (activeSub === "Packing") return <TabProduksi key="packing" defaultTab="packing" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} />;
-      if (activeSub === "Monitoring") return <TabProduksi key="monitoring" defaultTab="monitoring" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} />;
+      if (activeSub === "Cutting") return <TabProduksi key="cutting" defaultTab="cutting" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} pemakaianBahan={pemakaianBahan} setPemakaianBahan={setPemakaianBahan} />;
+      if (activeSub === "Jahit") return <TabProduksi key="jahit" defaultTab="jahit" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} pemakaianBahan={pemakaianBahan} setPemakaianBahan={setPemakaianBahan} />;
+      if (activeSub === "Lubang Kancing") return <TabProduksi key="lkancing" defaultTab="lkancing" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} pemakaianBahan={pemakaianBahan} setPemakaianBahan={setPemakaianBahan} />;
+      if (activeSub === "Buang Benang") return <TabProduksi key="bbenang" defaultTab="bbenang" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} pemakaianBahan={pemakaianBahan} setPemakaianBahan={setPemakaianBahan} />;
+      if (activeSub === "QC") return <TabProduksi key="qc" defaultTab="qc" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} pemakaianBahan={pemakaianBahan} setPemakaianBahan={setPemakaianBahan} />;
+      if (activeSub === "Steam") return <TabProduksi key="steam" defaultTab="steam" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} pemakaianBahan={pemakaianBahan} setPemakaianBahan={setPemakaianBahan} />;
+      if (activeSub === "Packing") return <TabProduksi key="packing" defaultTab="packing" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} pemakaianBahan={pemakaianBahan} setPemakaianBahan={setPemakaianBahan} />;
+      if (activeSub === "Monitoring") return <TabProduksi key="monitoring" defaultTab="monitoring" sharedBundleDB={sharedBundleDB} setSharedBundleDB={setSharedBundleDB} koreksiQueue={koreksiQueue} setKoreksiQueue={setKoreksiQueue} pemakaianBahan={pemakaianBahan} setPemakaianBahan={setPemakaianBahan} />;
     }
 
     if (activeNav === "koreksi") {
@@ -8540,10 +9190,10 @@ export default function StitchlixApp() {
     if (activeNav === "keuangan") {
       if (activeSub === "Ringkasan")      return <KeuRingkasan jurnal={jurnal} />;
       if (activeSub === "Jurnal Umum")    return <JurnalUmum jurnal={jurnal} setJurnal={setJurnal} inventory={inventory} setInventory={setInventory} trxMasuk={trxMasuk} setTrxMasuk={setTrxMasuk} />;
-      if (activeSub === "Laporan Per PO") return <LaporanPerPO />;
-      if (activeSub === "Laporan Per Bulan") return <LaporanPerBulan />;
-      if (activeSub === "Laporan Gaji")   return <LaporanGaji />;
-      if (activeSub === "Laporan Reject") return <LaporanReject />;
+      if (activeSub === "Laporan Per PO") return <LaporanPerPO jurnal={jurnal} pemakaianBahan={pemakaianBahan} artikelDB={artikelDB} />;
+      if (activeSub === "Laporan Per Bulan") return <LaporanPerBulan jurnal={jurnal} pemakaianBahan={pemakaianBahan} artikelDB={artikelDB} />;
+      if (activeSub === "Laporan Gaji")   return <LaporanGaji jurnal={jurnal} />;
+      if (activeSub === "Laporan Reject") return <LaporanReject artikelDB={artikelDB} />;
       return <KeuRingkasan jurnal={jurnal} />; // Default
     }
 
