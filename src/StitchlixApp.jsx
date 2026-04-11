@@ -8257,77 +8257,86 @@ const REJECT_DATA=[
 ];
 const BULAN_LIST=["2025-03","2025-04"];
 
-// --- HELPER CALCULATIONS (TAHAP 5) ---
+// --- HELPER CALCULATIONS (TAHAP 5 - PRESENTATION MODE) ---
 
 function hitungBiayaBahanPO(kodePO, pemakaianBahan, jurnal) {
-  const pemakaianPO = pemakaianBahan.filter(p => p.po === kodePO);
-  const jurnalBahan = jurnal.filter(j => 
-    j.jenis === "direct_bahan" && 
-    j.tagPO && j.tagPO.includes(kodePO)
-  );
-  const totalNilaiBeli = jurnalBahan.reduce((s, j) => s + j.jumlah, 0);
+  // PENGAMAN: Jika kodePO kosong
+  if (!kodePO) return 0;
   
-  // Jika ada totalNilaiBeli di jurnal, gunakan itu (karena sudah ditag ke PO)
-  // Ini fallback ke dummy jika jurnal kosong
-  if (totalNilaiBeli > 0) return Math.round(totalNilaiBeli);
+  // LOGIKA: Cari di data pemakaian bahan dummy/cutting
+  const listPemakaian = Array.isArray(pemakaianBahan) && pemakaianBahan.length > 0 ? pemakaianBahan : PEMAKAIAN_BAHAN;
+  const pemakaianPO = listPemakaian.filter(p => p.po === kodePO);
   
-  // Analisis dari pemakaianBahan (data Cutting)
-  const totalDariCutting = pemakaianPO.reduce((s, p) => s + (p.qtyPcs * p.pemakaianPerPcs * p.hargaBahan), 0);
-  if (totalDariCutting > 0) return Math.round(totalDariCutting);
-
+  if (pemakaianPO.length > 0) {
+    // Estimasi biaya dari data pemakaian (Bahan Baku riil)
+    return Math.round(pemakaianPO.reduce((s, p) => {
+        const qty = p.qtyPcs || 0;
+        const pemakaian = p.pemakaianPerPcs || p.pemakaianKainMeter || 0;
+        const harga = p.hargaBahan || 0;
+        return s + (qty * pemakaian * harga);
+    }, 0)) || (PO_DATA.find(p=>p.kode===kodePO)?.biayaBahan || 0);
+  }
+  
   // Fallback ke PO_DATA dummy
   return PO_DATA.find(p=>p.kode===kodePO)?.biayaBahan || 0;
 }
 
 function hitungBiayaUpahPO(kodePO, jurnal) {
-  const upahReal = jurnal
+  if (!kodePO) return 0;
+  
+  // Cek apakah ada data di jurnal (untuk presentasi)
+  const upahReal = Array.isArray(jurnal) ? jurnal
     .filter(j => j.jenis === "direct_upah" && j.detailUpah)
     .reduce((total, j) => {
-      const upahUntukPO = j.detailUpah
+      const upahUntukPO = (j.detailUpah || [])
         .filter(d => d.po === kodePO)
-        .reduce((s, d) => s + d.jumlah, 0);
+        .reduce((s, d) => s + (d.jumlah || d.upah || 0), 0);
       return total + upahUntukPO;
-    }, 0);
+    }, 0) : 0;
   
   if (upahReal > 0) return upahReal;
   
-  // Fallback ke PO_DATA dummy
+  // Fallback ke PO_DATA dummy agar presentasi tidak kosong
   return PO_DATA.find(p=>p.kode===kodePO)?.biayaUpah || 0;
 }
 
 function hitungOverheadPOBulan(kodePO, bulan, jurnal, artikelDB) {
-  const overheadBulan = jurnal.filter(j => 
-    j.jenis === "overhead" && 
-    j.tanggal && j.tanggal.startsWith(bulan)
-  );
+  if (!kodePO || !bulan) return 0;
   
-  let listOH = overheadBulan.length > 0 ? overheadBulan : (OVERHEAD_PER_BULAN[bulan] || []);
-  if (listOH.length === 0) return 0;
+  // 1. Ambil list overhead (Jurnal vs Dummy)
+  let listOH = Array.isArray(jurnal) ? jurnal.filter(j => j.jenis === "overhead" && j.tanggal?.startsWith(bulan)) : [];
+  if (listOH.length === 0) listOH = OVERHEAD_PER_BULAN[bulan] || [];
   
   const totalOH = listOH.reduce((s, j) => s + (j.jumlah || 0), 0);
+  if (totalOH === 0) return 0;
   
-  // Hitung total PCS terkirim dari artikelDB
-  const semuaPO = Object.keys(artikelDB);
-  const totalPCSTerkirimBulan = semuaPO.reduce((total, po) => {
-    const artikel = artikelDB[po] || [];
-    return total + artikel.reduce((s, a) => s + (a.kirim || 0), 0);
-  }, 0);
-  
-  // Fallback ke PO_DATA dummy jika artikelDB kosong/tidak ada kiriman
-  if (totalPCSTerkirimBulan === 0) {
-    const totalPCSDummy = PO_DATA.reduce((s,p)=>s+(p.pcsKirimPerBulan[bulan]||0),0);
-    const pcsKirimPO = PO_DATA.find(p=>p.kode===kodePO)?.pcsKirimPerBulan[bulan] || 0;
-    if (totalPCSDummy === 0) return 0;
-    return Math.round(totalOH * pcsKirimPO / totalPCSDummy);
+  // 2. Hitung total PCS terkirim (ArtikelDB vs Dummy)
+  let totalPCSTerkirimBulan = 0;
+  const listPOKeys = Object.keys(artikelDB || {});
+  if (listPOKeys.length > 0) {
+    totalPCSTerkirimBulan = listPOKeys.reduce((total, po) => {
+        const artikel = artikelDB[po] || [];
+        return total + (Array.isArray(artikel) ? artikel.reduce((s, a) => s + (a.kirim || 0), 0) : 0);
+    }, 0);
   }
   
-  const artikelPO = artikelDB[kodePO] || [];
-  const pcsKirimPO = artikelPO.reduce((s, a) => s + (a.kirim || 0), 0);
+  if (totalPCSTerkirimBulan === 0) {
+    totalPCSTerkirimBulan = PO_DATA.reduce((s,p) => s + (p.pcsKirimPerBulan?.[bulan] || 0), 0);
+  }
+  
+  if (totalPCSTerkirimBulan === 0) return 0;
+  
+  // 3. PCS terkirim PO ini
+  let pcsKirimPO = (artikelDB?.[kodePO] || []).reduce((s, a) => s + (a.kirim || 0), 0);
+  if (pcsKirimPO === 0) {
+    pcsKirimPO = PO_DATA.find(p => p.kode === kodePO)?.pcsKirimPerBulan?.[bulan] || 0;
+  }
   
   return Math.round(totalOH * pcsKirimPO / totalPCSTerkirimBulan);
 }
 
 function hitungTotalOverheadPOReal(kodePO, jurnal, artikelDB) {
+  if (!kodePO) return 0;
   return BULAN_LIST.reduce((total, bulan) => 
     total + hitungOverheadPOBulan(kodePO, bulan, jurnal, artikelDB), 0
   );
@@ -8445,26 +8454,26 @@ function LaporanPerBulan({jurnal = [], pemakaianBahan = [], artikelDB = {}}) {
 }
 
 function LaporanPerPO({jurnal = [], pemakaianBahan = [], artikelDB = {}}) {
-  const [selectedPO,setSelectedPO]=useState(PO_DATA[0]?.kode || "");
+  const [selectedPO,setSelectedPO]=useState(PO_DATA[0]?.kode || "PO-0001");
   const [showPemakaian,setShowPemakaian]=useState(false);
-  const po=PO_DATA.find(p=>p.kode===selectedPO) || PO_DATA[0] || {};
+  const po = PO_DATA.find(p=>p.kode===selectedPO) || PO_DATA[0] || {};
   
   const bBahan = hitungBiayaBahanPO(selectedPO, pemakaianBahan, jurnal);
   const bUpah = hitungBiayaUpahPO(selectedPO, jurnal);
-  const totalOH=hitungTotalOverheadPOReal(selectedPO, jurnal, artikelDB);
+  const totalOH = hitungTotalOverheadPOReal(selectedPO, jurnal, artikelDB);
   
   const totalReal = bBahan + bUpah + totalOH;
-  const hppEst = po.hppEst || 0;
-  const gap=totalReal - hppEst;
-  const totalHargaJual = po.totalHargaJual || 0;
-  const marginEst=totalHargaJual - hppEst;
-  const marginReal=totalHargaJual - totalReal;
+  const hppEst = po?.hppEst || 0;
+  const gap = totalReal - hppEst;
+  const totalHargaJual = po?.totalHargaJual || 0;
+  const marginEst = totalHargaJual - hppEst;
+  const marginReal = totalHargaJual - totalReal;
   
-  const pemakaianAktual = pemakaianBahan?.filter(p=>p.po===selectedPO) || [];
+  const pemakaianAktual = (Array.isArray(pemakaianBahan) && pemakaianBahan.length > 0 ? pemakaianBahan : PEMAKAIAN_BAHAN).filter(p=>p.po===selectedPO);
   
   const ohPerBulan=BULAN_LIST.map(b=>{
-    const pcs = artikelDB[selectedPO]?.reduce((s, a) => s + (a.kirim || 0), 0) || po.pcsKirimPerBulan?.[b] || 0;
-    let ohs = jurnal?.filter(j => j.jenis === "overhead" && j.tanggal && j.tanggal.startsWith(b)) || [];
+    const pcs = (artikelDB?.[selectedPO] || []).reduce((s, a) => s + (a.kirim || 0), 0) || po?.pcsKirimPerBulan?.[b] || 0;
+    let ohs = Array.isArray(jurnal) ? jurnal.filter(j => j.jenis === "overhead" && j.tanggal?.startsWith(b)) : [];
     if (ohs.length === 0) ohs = OVERHEAD_PER_BULAN[b] || [];
     
     return {
@@ -8474,7 +8483,7 @@ function LaporanPerPO({jurnal = [], pemakaianBahan = [], artikelDB = {}}) {
       alokasi: hitungOverheadPOBulan(selectedPO, b, jurnal, artikelDB),
       overheads: ohs
     }
-  }).filter(b => b.pcsKirim > 0 || (po.bulanAktif && po.bulanAktif.includes(b.bulan)));
+  }).filter(b => b.pcsKirim > 0 || po?.bulanAktif?.includes(b.bulan));
   return (
     <div>
       <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
@@ -8585,14 +8594,29 @@ function LaporanPerPO({jurnal = [], pemakaianBahan = [], artikelDB = {}}) {
 }
 
 function LaporanGaji({jurnal = []}) {
-  const listUpah = jurnal?.filter(j => j.jenis === "direct_upah" && j.detailUpah) || [];
+  let listUpah = Array.isArray(jurnal) ? jurnal.filter(j => j.jenis === "direct_upah" && j.detailUpah) : [];
+  
+  // FAILBACK UNTUK PRESENTASI: Jika jurnal upah kosong, gunakan data dummy GAJI_REKAP
+  if (listUpah.length === 0) {
+      listUpah = GAJI_REKAP.map(g => ({
+          id: g.periodeId,
+          keterangan: g.periode,
+          jumlah: g.totalDibayar,
+          detailUpah: g.detail.map(d => ({
+              karyawan: d.karyawan,
+              po: d.po,
+              jumlah: d.upah
+          }))
+      }));
+  }
+  
   const totalGaji = listUpah.reduce((s,j)=>s+(j.jumlah || 0),0);
   
   const totalPerPO = {};
   listUpah.forEach(j => {
-    j.detailUpah?.forEach(d => {
+    (j.detailUpah || []).forEach(d => {
       if(!totalPerPO[d.po]) totalPerPO[d.po] = 0;
-      totalPerPO[d.po] += d.jumlah;
+      totalPerPO[d.po] += (d.jumlah || d.upah || 0);
     });
   });
 
