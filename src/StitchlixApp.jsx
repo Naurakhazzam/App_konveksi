@@ -8584,7 +8584,51 @@ function LaporanPerPO({jurnal = [], pemakaianBahan = [], artikelDB = {}}) {
   );
 }
 
-                <td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,fontWeight:800,color:C.green}}>{rp(j.jumlah || 0)}</span></td></tr></tfoot>
+function LaporanGaji({jurnal = []}) {
+  const listUpah = jurnal?.filter(j => j.jenis === "direct_upah" && j.detailUpah) || [];
+  const totalGaji = listUpah.reduce((s,j)=>s+(j.jumlah || 0),0);
+  
+  const totalPerPO = {};
+  listUpah.forEach(j => {
+    j.detailUpah?.forEach(d => {
+      if(!totalPerPO[d.po]) totalPerPO[d.po] = 0;
+      totalPerPO[d.po] += d.jumlah;
+    });
+  });
+
+  return (
+    <div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:16}}>
+        {[{label:"Total Gaji Dibayar",value:rp(totalGaji),color:C.green},{label:"Periode Tercatat",value:listUpah.length+" periode",color:C.cyan},{label:"Total Karyawan",value:[...new Set(listUpah.flatMap(j=>j.detailUpah?.map(d=>d.karyawan) || []))].length+" orang",color:C.purple}].map(k=>(
+          <div key={k.label} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 16px",borderLeft:`3px solid ${k.color}`}}>
+            <div style={{fontSize:8,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:3}}>{k.label}</div>
+            <div style={{fontSize:16,fontWeight:800,color:k.color,fontFamily:C.syne}}>{k.value}</div>
+          </div>
+        ))}
+      </div>
+      
+      {listUpah.length === 0 && (
+        <div style={{padding:40, textAlign:"center", background:C.card, borderRadius:12, border:`1px dashed ${C.border}`, color:C.textSub}}>
+          Belum ada data REKAP Gaji di Jurnal Umum. Silakan lakukan pembayaran di Tab Penggajian.
+        </div>
+      )}
+
+      {listUpah.length > 0 && (
+        <Panel title="ALOKASI UPAH PER PO (AKTUAL)" accent={C.purple}>
+          <div style={{overflowX:"auto"}}>
+            <table style={{width:"100%",borderCollapse:"collapse"}}>
+              <thead><tr style={{background:"#0e204055"}}>{["PO","Model","Total Upah","% dari Total"].map(h=>(<th key={h} style={{...TH_LAP,textAlign:["Total Upah","% dari Total"].includes(h)?"right":TH_LAP.textAlign}}>{h}</th>))}</tr></thead>
+              <tbody>{Object.entries(totalPerPO).map(([po,total],i)=>{const pd=PO_DATA.find(p=>p.kode===po);return(<tr key={po} style={{borderBottom:`1px solid ${C.border}`}}><td style={TD_LAP(i)}><span style={{fontFamily:C.mono,fontWeight:700,color:C.cyan}}>{po}</span></td><td style={TD_LAP(i)}><span style={{fontWeight:600}}>{pd?.model||"—"}</span></td><td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,fontWeight:700,color:C.purple}}>{rp(total)}</span></td><td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,color:C.textSub}}>{pct(total,totalGaji)}</span></td></tr>);})}</tbody>
+            </table>
+          </div>
+        </Panel>
+      )}
+
+      {listUpah.map(j=>(<Panel key={j.id} title={`REKAP — ${j.keterangan}`} accent={C.green}>
+        <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+          <thead><tr style={{background:"#0e204055"}}>{["Karyawan","PO","Upah"].map(h=>(<th key={h} style={{...TH_LAP,textAlign:h==="Upah"?"right":TH_LAP.textAlign}}>{h}</th>))}</tr></thead>
+          <tbody>{j.detailUpah?.map((d,i)=>(<tr key={i} style={{borderBottom:`1px solid ${C.border}`}}><td style={TD_LAP(i)}><span style={{fontWeight:600}}>{d.karyawan}</span></td><td style={TD_LAP(i)}><span style={{fontFamily:C.mono,fontSize:10,color:C.blue,fontWeight:700}}>{d.po}</span></td><td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,fontWeight:700,color:C.green}}>{rp(d.jumlah)}</span></td></tr>))}</tbody>
+          <tfoot><tr style={{background:"#0e204055",borderTop:`2px solid ${C.border}`}}><td colSpan={2} style={{padding:"10px 14px",fontSize:10,fontWeight:700,color:C.textSub,fontFamily:C.sans}}>TOTAL</td><td style={{padding:"10px 14px",textAlign:"right",fontFamily:C.mono,fontWeight:800,color:C.green}}>{rp(j.jumlah || 0)}</td></tr></tfoot>
         </table></div>
       </Panel>))}
     </div>
