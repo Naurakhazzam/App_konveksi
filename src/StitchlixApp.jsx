@@ -8333,29 +8333,29 @@ function hitungTotalOverheadPOReal(kodePO, jurnal, artikelDB) {
   );
 }
 
-function LaporanPerBulan({jurnal, pemakaianBahan, artikelDB}) {
+function LaporanPerBulan({jurnal = [], pemakaianBahan = [], artikelDB = {}}) {
   const [bulan,setBulan]=useState("2025-04");
   
-  let overheads = jurnal.filter(j => j.jenis === "overhead" && j.tanggal && j.tanggal.startsWith(bulan));
+  let overheads = jurnal?.filter(j => j.jenis === "overhead" && j.tanggal && j.tanggal.startsWith(bulan)) || [];
   if (overheads.length === 0) overheads = OVERHEAD_PER_BULAN[bulan] || [];
 
-  const totalOH=overheads.reduce((s,o)=>s+o.jumlah,0);
+  const totalOH=overheads.reduce((s,o)=>s+(o.jumlah||0),0);
 
   // Hitung total PCS terkirim
-  const semuaPO = Object.keys(artikelDB);
+  const semuaPO = Object.keys(artikelDB || {});
   let totalPCSBulan = semuaPO.reduce((total, po) => {
     const artikel = artikelDB[po] || [];
     return total + artikel.reduce((s, a) => s + (a.kirim || 0), 0);
   }, 0);
   if (totalPCSBulan === 0) {
-    totalPCSBulan = PO_DATA.reduce((s,p)=>s+(p.pcsKirimPerBulan[bulan]||0),0);
+    totalPCSBulan = PO_DATA.reduce((s,p)=>s+(p.pcsKirimPerBulan?.[bulan]||0),0);
   }
 
   const ohPerPCS=totalPCSBulan>0?Math.round(totalOH/totalPCSBulan):0;
   const poAktif = totalPCSBulan > 0 ? PO_DATA.filter(po => {
-    const pcs = artikelDB[po.kode]?.reduce((s, a) => s + (a.kirim || 0), 0) || po.pcsKirimPerBulan[bulan] || 0;
+    const pcs = artikelDB[po.kode]?.reduce((s, a) => s + (a.kirim || 0), 0) || po.pcsKirimPerBulan?.[bulan] || 0;
     return pcs > 0;
-  }) : PO_DATA.filter(p=>p.bulanAktif.includes(bulan));
+  }) : PO_DATA.filter(p=>p.bulanAktif?.includes(bulan));
   const bulanLabel=(b)=>new Date(b+"-01").toLocaleDateString("id-ID",{month:"long",year:"numeric"});
   return (
     <div>
@@ -8444,24 +8444,27 @@ function LaporanPerBulan({jurnal, pemakaianBahan, artikelDB}) {
   );
 }
 
-function LaporanPerPO({jurnal, pemakaianBahan, artikelDB}) {
-  const [selectedPO,setSelectedPO]=useState("PO-0001");
+function LaporanPerPO({jurnal = [], pemakaianBahan = [], artikelDB = {}}) {
+  const [selectedPO,setSelectedPO]=useState(PO_DATA[0]?.kode || "");
   const [showPemakaian,setShowPemakaian]=useState(false);
-  const po=PO_DATA.find(p=>p.kode===selectedPO);
+  const po=PO_DATA.find(p=>p.kode===selectedPO) || PO_DATA[0] || {};
   
   const bBahan = hitungBiayaBahanPO(selectedPO, pemakaianBahan, jurnal);
   const bUpah = hitungBiayaUpahPO(selectedPO, jurnal);
   const totalOH=hitungTotalOverheadPOReal(selectedPO, jurnal, artikelDB);
   
   const totalReal = bBahan + bUpah + totalOH;
-  const gap=totalReal-po.hppEst;
-  const marginEst=po.totalHargaJual-po.hppEst;const marginReal=po.totalHargaJual-totalReal;
+  const hppEst = po.hppEst || 0;
+  const gap=totalReal - hppEst;
+  const totalHargaJual = po.totalHargaJual || 0;
+  const marginEst=totalHargaJual - hppEst;
+  const marginReal=totalHargaJual - totalReal;
   
-  const pemakaianAktual = pemakaianBahan.filter(p=>p.po===selectedPO);
+  const pemakaianAktual = pemakaianBahan?.filter(p=>p.po===selectedPO) || [];
   
   const ohPerBulan=BULAN_LIST.map(b=>{
-    const pcs = artikelDB[selectedPO]?.reduce((s, a) => s + (a.kirim || 0), 0) || po.pcsKirimPerBulan[b] || 0;
-    let ohs = jurnal.filter(j => j.jenis === "overhead" && j.tanggal && j.tanggal.startsWith(b));
+    const pcs = artikelDB[selectedPO]?.reduce((s, a) => s + (a.kirim || 0), 0) || po.pcsKirimPerBulan?.[b] || 0;
+    let ohs = jurnal?.filter(j => j.jenis === "overhead" && j.tanggal && j.tanggal.startsWith(b)) || [];
     if (ohs.length === 0) ohs = OVERHEAD_PER_BULAN[b] || [];
     
     return {
@@ -8471,7 +8474,7 @@ function LaporanPerPO({jurnal, pemakaianBahan, artikelDB}) {
       alokasi: hitungOverheadPOBulan(selectedPO, b, jurnal, artikelDB),
       overheads: ohs
     }
-  }).filter(b => b.pcsKirim > 0 || po.bulanAktif.includes(b.bulan));
+  }).filter(b => b.pcsKirim > 0 || (po.bulanAktif && po.bulanAktif.includes(b.bulan)));
   return (
     <div>
       <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
@@ -8521,7 +8524,7 @@ function LaporanPerPO({jurnal, pemakaianBahan, artikelDB}) {
               <span style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:C.sans}}>TOTAL REALISASI</span>
               <div style={{textAlign:"right"}}>
                 <div style={{fontFamily:C.mono,fontWeight:800,fontSize:16,color:gap>0?C.red:C.green}}>{rp(totalReal)}</div>
-                <div style={{fontSize:9,color:C.textSub,fontFamily:C.mono}}>vs HPP Est: {rp(po.hppEst)}</div>
+                <div style={{fontSize:9,color:C.textSub,fontFamily:C.mono}}>vs HPP Est: {rp(hppEst)}</div>
               </div>
             </div>
           </div>
@@ -8581,59 +8584,15 @@ function LaporanPerPO({jurnal, pemakaianBahan, artikelDB}) {
   );
 }
 
-function LaporanGaji({jurnal}) {
-  const listUpah = jurnal.filter(j => j.jenis === "direct_upah" && j.detailUpah);
-  const totalGaji = listUpah.reduce((s,j)=>s+j.jumlah,0);
-  
-  const totalPerPO = {};
-  listUpah.forEach(j => {
-    j.detailUpah.forEach(d => {
-      if(!totalPerPO[d.po]) totalPerPO[d.po] = 0;
-      totalPerPO[d.po] += d.jumlah;
-    });
-  });
-
-  return (
-    <div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:16}}>
-        {[{label:"Total Gaji Dibayar",value:rp(totalGaji),color:C.green},{label:"Periode Tercatat",value:listUpah.length+" periode",color:C.cyan},{label:"Total Karyawan",value:[...new Set(listUpah.flatMap(j=>j.detailUpah.map(d=>d.karyawan)))].length+" orang",color:C.purple}].map(k=>(
-          <div key={k.label} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 16px",borderLeft:`3px solid ${k.color}`}}>
-            <div style={{fontSize:8,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:3}}>{k.label}</div>
-            <div style={{fontSize:16,fontWeight:800,color:k.color,fontFamily:C.syne}}>{k.value}</div>
-          </div>
-        ))}
-      </div>
-      
-      {listUpah.length === 0 && (
-        <div style={{padding:40, textAlign:"center", background:C.card, borderRadius:12, border:`1px dashed ${C.border}`, color:C.textSub}}>
-          Belum ada data REKAP Gaji di Jurnal Umum. Silakan lakukan pembayaran di Tab Penggajian.
-        </div>
-      )}
-
-      {listUpah.length > 0 && (
-        <Panel title="ALOKASI UPAH PER PO (AKTUAL)" accent={C.purple}>
-          <div style={{overflowX:"auto"}}>
-            <table style={{width:"100%",borderCollapse:"collapse"}}>
-              <thead><tr style={{background:"#0e204055"}}>{["PO","Model","Total Upah","% dari Total"].map(h=>(<th key={h} style={{...TH_LAP,textAlign:["Total Upah","% dari Total"].includes(h)?"right":TH_LAP.textAlign}}>{h}</th>))}</tr></thead>
-              <tbody>{Object.entries(totalPerPO).map(([po,total],i)=>{const pd=PO_DATA.find(p=>p.kode===po);return(<tr key={po} style={{borderBottom:`1px solid ${C.border}`}}><td style={TD_LAP(i)}><span style={{fontFamily:C.mono,fontWeight:700,color:C.cyan}}>{po}</span></td><td style={TD_LAP(i)}><span style={{fontWeight:600}}>{pd?.model||"—"}</span></td><td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,fontWeight:700,color:C.purple}}>{rp(total)}</span></td><td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,color:C.textSub}}>{pct(total,totalGaji)}</span></td></tr>);})}</tbody>
-            </table>
-          </div>
-        </Panel>
-      )}
-
-      {listUpah.map(j=>(<Panel key={j.id} title={`REKAP — ${j.keterangan}`} accent={C.green}>
-        <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
-          <thead><tr style={{background:"#0e204055"}}>{["Karyawan","PO","Upah"].map(h=>(<th key={h} style={{...TH_LAP,textAlign:h==="Upah"?"right":TH_LAP.textAlign}}>{h}</th>))}</tr></thead>
-          <tbody>{j.detailUpah.map((d,i)=>(<tr key={i} style={{borderBottom:`1px solid ${C.border}`}}><td style={TD_LAP(i)}><span style={{fontWeight:600}}>{d.karyawan}</span></td><td style={TD_LAP(i)}><span style={{fontFamily:C.mono,fontSize:10,color:C.blue,fontWeight:700}}>{d.po}</span></td><td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,fontWeight:700,color:C.green}}>{rp(d.jumlah)}</span></td></tr>))}</tbody>
-          <tfoot><tr style={{background:"#0e204055",borderTop:`2px solid ${C.border}`}}><td colSpan={2} style={{padding:"10px 14px",fontSize:10,fontWeight:700,color:C.textSub,fontFamily:C.sans}}>TOTAL</td><td style={{padding:"10px 14px",textAlign:"right",fontFamily:C.mono,fontWeight:800,color:C.green}}>{rp(j.jumlah)}</td></tr></tfoot>
+                <td style={{...TD_LAP(i),textAlign:"right"}}><span style={{fontFamily:C.mono,fontWeight:800,color:C.green}}>{rp(j.jumlah || 0)}</span></td></tr></tfoot>
         </table></div>
       </Panel>))}
     </div>
   );
 }
 
-function LaporanReject() {
-  const totalR=REJECT_DATA.reduce((s,r)=>s+r.qty,0);const bisaR=REJECT_DATA.filter(r=>r.bisaRework);const tidakR=REJECT_DATA.filter(r=>!r.bisaRework);const sudahR=bisaR.filter(r=>r.statusRework==="selesai");
+function LaporanReject({artikelDB}) {
+  const totalR=REJECT_DATA.reduce((s,r)=>s+(r.qty||0),0);const bisaR=REJECT_DATA.filter(r=>r.bisaRework);const tidakR=REJECT_DATA.filter(r=>!r.bisaRework);const sudahR=bisaR.filter(r=>r.statusRework==="selesai");
   return (
     <div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
