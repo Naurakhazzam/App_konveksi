@@ -62,24 +62,28 @@ function PremiumBackground() {
 
 
 const NAV = [
-  { id:"dashboard", label:"Dashboard", icon:"⬡", color:C.cyan,
-    subs:[{id:"s_prod",label:"Produksi"},{id:"s_keu",label:"Keuangan"},{id:"s_gaji",label:"Penggajian"}] },
+  { id:"dashboard", label:"Dashboard", icon:"⊞", color:C.blue,
+    subs:[{id:"d1",label:"Produksi"},{id:"d2",label:"Keuangan"},{id:"d3",label:"Penggajian"}] },
   { id:"produksi", label:"Produksi", icon:"◈", color:C.green,
     subs:[{id:"p0",label:"Input PO"},{id:"p1",label:"Cutting"},{id:"p2",label:"Jahit"},{id:"p3",label:"Lubang Kancing"},
           {id:"p4",label:"Buang Benang"},{id:"p5",label:"QC"},{id:"p6",label:"Steam"},
           {id:"p7",label:"Packing"},{id:"p8",label:"Monitoring"}] },
   { id:"pengiriman", label:"Pengiriman", icon:"◎", color:C.blue,
     subs:[{id:"sj1",label:"Buat Surat Jalan"},{id:"sj2",label:"Riwayat Kirim"}] },
-  { id:"keuangan", label:"Keuangan", icon:"◇", color:C.yellow,
-    subs:[{id:"k1",label:"Ringkasan"},{id:"k2",label:"Laporan PO"},
-          {id:"k3",label:"Laporan Margin"},{id:"k4",label:"Jurnal Umum"}] },
   { id:"penggajian", label:"Penggajian", icon:"◉", color:C.purple,
     subs:[{id:"g1",label:"Rekap Gaji"},{id:"g2",label:"Kasbon"},{id:"g3",label:"Slip Gaji"}] },
   { id:"inventory", label:"Inventory", icon:"▣", color:C.green,
     subs:[{id:"i1",label:"Overview Stok"},{id:"i2",label:"Transaksi Keluar"},{id:"i3",label:"Alert Order"}] },
-  { id:"laporan", label:"Laporan", icon:"◫", color:C.orange,
-    subs:[{id:"l1",label:"Budget vs Realisasi"},{id:"l2",label:"Laporan PO"},
-          {id:"l3",label:"Laporan Gaji"},{id:"l4",label:"Laporan Reject"},{id:"l5",label:"Keuangan"}] },
+  { id:"keuangan", label:"Keuangan", icon:"❂", color:C.green, 
+    subs:[
+      {id:"k1",label:"Ringkasan"},
+      {id:"k2",label:"Jurnal Umum"},
+      {id:"k3",label:"Laporan Per PO"},
+      {id:"k4",label:"Laporan Per Bulan"},
+      {id:"k5",label:"Laporan Gaji"},
+      {id:"k6",label:"Laporan Reject"}
+    ]
+  },
   { id:"master", label:"Master Data", icon:"◰", color:C.blue,
     subs:[{id:"m0",label:"Master Detail"},{id:"m1",label:"Produk & HPP"},{id:"m2",label:"Karyawan"},{id:"m3",label:"Klien"},
           {id:"m4",label:"Jenis Reject"},{id:"m5",label:"Kategori Transaksi"},
@@ -89,6 +93,7 @@ const NAV = [
 ];
 
 const rp = n => "Rp " + Number(n||0).toLocaleString("id-ID");
+const pct = (a, b) => b > 0 ? ((a / b) * 100).toFixed(1) + "%" : "0%";
 
 function MacDots() {
   return (
@@ -846,6 +851,99 @@ function DashKeuangan() {
   );
 }
 
+function KeuRingkasan({jurnal}) {
+  const totalPenjualan = PO_KEU.reduce((s,p)=>s+p.jual,0);
+  const totalHPP       = PO_KEU.reduce((s,p)=>s+p.hpp,0);
+  const totalKeluar    = jurnal.filter(j=>j.tipe==="keluar").reduce((s,j)=>s+j.jumlah,0);
+  const totalMasuk     = jurnal.filter(j=>j.tipe==="masuk"&&j.namaKategori!=="Pinjaman").reduce((s,j)=>s+j.jumlah,0);
+  const totalPinjaman  = jurnal.filter(j=>j.namaKategori==="Pinjaman").reduce((s,j)=>s+j.jumlah,0);
+  const marginEst      = totalPenjualan - totalHPP;
+  const marginReal     = totalPenjualan - totalKeluar;
+  const saldoKas       = totalMasuk - totalKeluar;
+
+  const perKategori = {};
+  jurnal.filter(j=>j.tipe==="keluar").forEach(j=>{
+    if(!perKategori[j.namaKategori]) perKategori[j.namaKategori]=0;
+    perKategori[j.namaKategori]+=j.jumlah;
+  });
+  const kategoriList = Object.entries(perKategori).sort((a,b)=>b[1]-a[1]);
+
+  return (
+    <div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:16}}>
+        {[
+          {label:"Total Penjualan (Est)",value:rp(totalPenjualan),color:C.green,sub:"dari semua PO aktif"},
+          {label:"Margin Estimasi",value:rp(marginEst),color:C.cyan,sub:pct(marginEst,totalPenjualan)+" dari penjualan"},
+          {label:"Margin Real",value:rp(marginReal),color:marginReal>=marginEst?C.green:C.red,sub:pct(marginReal,totalPenjualan)+" aktual"},
+        ].map(k=>(
+          <div key={k.label} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"16px 18px",borderLeft:`3px solid ${k.color}`}}>
+            <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4}}>{k.label}</div>
+            <div style={{fontSize:20,fontWeight:800,color:k.color,fontFamily:C.syne,lineHeight:1,marginBottom:4}}>{k.value}</div>
+            <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans}}>{k.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      {marginReal<marginEst&&(
+        <div style={{marginBottom:16,padding:"12px 18px",background:`${C.red}10`,borderRadius:10,
+          border:`1px solid ${C.red}44`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div>
+            <div style={{fontSize:11,fontWeight:700,color:C.red,fontFamily:C.sans}}>⚠ MARGIN REAL DI BAWAH ESTIMASI</div>
+            <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,marginTop:3}}>
+              Selisih: {rp(marginEst-marginReal)} — periksa pengeluaran operasional
+            </div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:18,fontWeight:800,color:C.red,fontFamily:C.syne}}>-{rp(marginEst-marginReal)}</div>
+          </div>
+        </div>
+      )}
+
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+        <Panel title="RINGKASAN KAS" accent={C.cyan}>
+          <div style={{padding:"16px"}}>
+            {[
+              {label:"Total Masuk",value:totalMasuk,color:C.green,prefix:"+"},
+              {label:"Total Keluar",value:totalKeluar,color:C.red,prefix:"-"},
+              {label:"Saldo Kas",value:saldoKas,color:saldoKas>=0?C.cyan:C.red,prefix:""},
+              {label:"Pinjaman (terpisah)",value:totalPinjaman,color:C.yellow,prefix:""},
+            ].map((k,i)=>(
+              <div key={k.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",
+                padding:"10px 0",borderBottom:i<3?`1px solid ${C.border}`:"none"}}>
+                <span style={{fontSize:11,color:C.textSub,fontFamily:C.sans}}>{k.label}</span>
+                <span style={{fontSize:14,fontWeight:700,color:k.color,fontFamily:C.mono}}>
+                  {k.prefix}{rp(k.value)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Panel>
+
+        <Panel title="PENGELUARAN PER KATEGORI" accent={C.red}>
+          <div style={{padding:"12px 0"}}>
+            {kategoriList.map(([nama,jumlah])=>{
+              const persen = totalKeluar>0?Math.round((jumlah/totalKeluar)*100):0;
+              return (
+                <div key={nama} style={{padding:"8px 16px",borderBottom:`1px solid ${C.border}`}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                    <span style={{fontSize:11,color:C.text,fontFamily:C.sans}}>{nama}</span>
+                    <span style={{fontSize:11,fontWeight:700,color:C.red,fontFamily:C.mono}}>{rp(jumlah)}</span>
+                  </div>
+                  <div style={{height:3,background:C.border,borderRadius:99,overflow:"hidden"}}>
+                    <div style={{width:`${persen}%`,height:"100%",background:C.red,borderRadius:99}}/>
+                  </div>
+                  <div style={{fontSize:8,color:C.textMid,fontFamily:C.mono,marginTop:2}}>{persen}%</div>
+                </div>
+              );
+            })}
+          </div>
+        </Panel>
+      </div>
+    </div>
+  );
+}
+
+
 // ── DASHBOARD PENGGAJIAN ─────────────────────────────────────────────────────
 const KARYAWAN=[
   {nama:"EPUL",   role:"Jahit",        pcs:30,  upah:630000,  kasbonTotal:0,      kasbonTerbayar:0,      target:"Capai",reject:0,deduction:0},
@@ -1580,9 +1678,6 @@ function MasterDetail() {
 
 
 // --- MASTER PRODUK ---
-
-
-const pct = (margin,jual) => jual>0 ? ((margin/jual)*100).toFixed(1)+"%" : "0%";
 
 
 
@@ -7625,243 +7720,8 @@ function JurnalUmum({jurnal,setJurnal,inventory,setInventory,trxMasuk,setTrxMasu
   );
 }
 
-// ── SUB-TAB: RINGKASAN ───────────────────────────────────────────────────────
-function KeuRingkasan({jurnal}) {
-  const totalPenjualan = PO_LIST_KEU.reduce((s,p)=>s+p.totalHargaJual,0);
-  const totalHPP       = PO_LIST_KEU.reduce((s,p)=>s+p.hpp,0);
-  const totalKeluar    = jurnal.filter(j=>j.tipe==="keluar").reduce((s,j)=>s+j.jumlah,0);
-  const totalMasuk     = jurnal.filter(j=>j.tipe==="masuk"&&j.namaKategori!=="Pinjaman").reduce((s,j)=>s+j.jumlah,0);
-  const totalPinjaman  = jurnal.filter(j=>j.namaKategori==="Pinjaman").reduce((s,j)=>s+j.jumlah,0);
-  const marginEst      = totalPenjualan - totalHPP;
-  const marginReal     = totalPenjualan - totalKeluar;
-  const saldoKas       = totalMasuk - totalKeluar;
+// ── SUB-TAB: LAPORAN ─────────────────────────────────────────────────────────
 
-  const perKategori = {};
-  jurnal.filter(j=>j.tipe==="keluar").forEach(j=>{
-    if(!perKategori[j.namaKategori]) perKategori[j.namaKategori]=0;
-    perKategori[j.namaKategori]+=j.jumlah;
-  });
-  const kategoriList = Object.entries(perKategori).sort((a,b)=>b[1]-a[1]);
-
-  return (
-    <div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:16}}>
-        {[
-          {label:"Total Penjualan (Est)",value:rp(totalPenjualan),color:C.green,sub:"dari semua PO aktif"},
-          {label:"Margin Estimasi",value:rp(marginEst),color:C.cyan,sub:pct(marginEst,totalPenjualan)+" dari penjualan"},
-          {label:"Margin Real",value:rp(marginReal),color:marginReal>=marginEst?C.green:C.red,sub:pct(marginReal,totalPenjualan)+" aktual"},
-        ].map(k=>(
-          <div key={k.label} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"16px 18px",borderLeft:`3px solid ${k.color}`}}>
-            <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4}}>{k.label}</div>
-            <div style={{fontSize:20,fontWeight:800,color:k.color,fontFamily:C.syne,lineHeight:1,marginBottom:4}}>{k.value}</div>
-            <div style={{fontSize:9,color:C.textSub,fontFamily:C.sans}}>{k.sub}</div>
-          </div>
-        ))}
-      </div>
-
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
-        <Panel title="RINGKASAN KAS" accent={C.cyan}>
-          <div style={{padding:"16px"}}>
-            {[
-              {label:"Total Masuk",value:totalMasuk,color:C.green,prefix:"+"},
-              {label:"Total Keluar",value:totalKeluar,color:C.red,prefix:"-"},
-              {label:"Saldo Kas",value:saldoKas,color:saldoKas>=0?C.cyan:C.red,prefix:""},
-              {label:"Pinjaman (terpisah)",value:totalPinjaman,color:C.yellow,prefix:""},
-            ].map((k,i)=>(
-              <div key={k.label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",
-                padding:"10px 0",borderBottom:i<3?`1px solid ${C.border}`:"none"}}>
-                <span style={{fontSize:11,color:C.textSub,fontFamily:C.sans}}>{k.label}</span>
-                <span style={{fontSize:14,fontWeight:700,color:k.color,fontFamily:C.mono}}>
-                  {k.prefix}{rp(k.value)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </Panel>
-
-        <Panel title="PENGELUARAN PER KATEGORI" accent={C.red}>
-          <div style={{padding:"12px 0"}}>
-            {kategoriList.map(([nama,jumlah])=>{
-              const persen = totalKeluar>0?Math.round((jumlah/totalKeluar)*100):0;
-              return (
-                <div key={nama} style={{padding:"8px 16px",borderBottom:`1px solid ${C.border}`}}>
-                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                    <span style={{fontSize:11,color:C.text,fontFamily:C.sans}}>{nama}</span>
-                    <span style={{fontSize:11,fontWeight:700,color:C.red,fontFamily:C.mono}}>{rp(jumlah)}</span>
-                  </div>
-                  <div style={{height:3,background:C.border,borderRadius:99,overflow:"hidden"}}>
-                    <div style={{width:`${persen}%`,height:"100%",background:C.red,borderRadius:99}}/>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </Panel>
-      </div>
-    </div>
-  );
-}
-
-// ── SUB-TAB: LAPORAN PO ──────────────────────────────────────────────────────
-function KeuLaporanPO({jurnal}) {
-  const [selectedPO,setSelectedPO] = useState("semua");
-  const poJurnal = (kode) => jurnal.filter(j=>j.idPO===kode);
-  return (
-    <div>
-      <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
-        <button onClick={()=>setSelectedPO("semua")}
-          style={{padding:"7px 14px",fontSize:10,fontWeight:700,fontFamily:C.mono,
-            background:selectedPO==="semua"?C.cyan:"transparent",color:selectedPO==="semua"?"#000":C.textSub,
-            border:`1px solid ${selectedPO==="semua"?C.cyan:C.border}`,borderRadius:8,cursor:"pointer"}}>SEMUA PO</button>
-        {PO_LIST_KEU.map(p=>(
-          <button key={p.kode} onClick={()=>setSelectedPO(p.kode)}
-            style={{padding:"7px 14px",fontSize:10,fontWeight:700,fontFamily:C.mono,
-              background:selectedPO===p.kode?C.cyan:"transparent",color:selectedPO===p.kode?"#000":C.textSub,
-              border:`1px solid ${selectedPO===p.kode?C.cyan:C.border}`,borderRadius:8,cursor:"pointer"}}>
-            {p.kode}
-          </button>
-        ))}
-      </div>
-      {(selectedPO==="semua"?PO_LIST_KEU:[PO_LIST_KEU.find(p=>p.kode===selectedPO)].filter(Boolean)).map(po=>{
-        const jPO = poJurnal(po.kode);
-        const biayaPO = jPO.filter(j=>j.tipe==="keluar").reduce((s,j)=>s+j.jumlah,0);
-        const marginE = po.totalHargaJual-po.hpp;
-        const marginR = po.totalHargaJual-biayaPO;
-        const gap = marginR-marginE;
-        return (
-          <Panel key={po.kode} title={`${po.kode} — ${po.klien} — ${po.model}`} accent={gap>=0?C.green:C.red}>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,padding:"14px 18px",borderBottom:`1px solid ${C.border}`}}>
-              {[
-                {label:"Harga Jual",value:rp(po.totalHargaJual),color:C.text},
-                {label:"Margin Est",value:rp(marginE),color:C.cyan},
-                {label:"Biaya Realisasi",value:rp(biayaPO),color:C.red},
-                {label:"Margin Real",value:rp(marginR),color:marginR>=marginE?C.green:C.red},
-                {label:"Gap",value:(gap>=0?"+":"")+rp(gap),color:gap>=0?C.green:C.red},
-              ].map(k=>(
-                <div key={k.label}>
-                  <div style={{fontSize:8,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:3}}>{k.label}</div>
-                  <div style={{fontSize:14,fontWeight:700,color:k.color,fontFamily:C.mono}}>{k.value}</div>
-                </div>
-              ))}
-            </div>
-            {jPO.length>0 && (
-              <table style={{width:"100%",borderCollapse:"collapse"}}>
-                <thead><tr style={{background:"#0e204055"}}>
-                  {["Tanggal","Kategori","Keterangan","Jumlah"].map(h=>(
-                    <th key={h} style={{...TH_KEU,textAlign:h==="Jumlah"?"right":TH_KEU.textAlign}}>{h}</th>
-                  ))}
-                </tr></thead>
-                <tbody>
-                  {jPO.map((j,i)=>(
-                    <tr key={j.id} style={{borderBottom:`1px solid ${C.border}`}}>
-                      <td style={TD_KEU(i)}><span style={{fontFamily:C.mono,fontSize:10,color:C.textSub}}>{j.tanggal}</span></td>
-                      <td style={TD_KEU(i)}>{j.namaKategori}</td>
-                      <td style={TD_KEU(i)}><span style={{fontSize:10,color:C.textSub}}>{j.keterangan}</span></td>
-                      <td style={{...TD_KEU(i),textAlign:"right"}}><span style={{fontFamily:C.mono,fontWeight:700,color:j.tipe==="masuk"?C.green:C.red}}>{j.tipe==="masuk"?"+":"-"}{rp(j.jumlah)}</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </Panel>
-        );
-      })}
-    </div>
-  );
-}
-
-// ── SUB-TAB: LAPORAN MARGIN ──────────────────────────────────────────────────
-function KeuLaporanMargin({jurnal}) {
-  const totalPenjualan = PO_LIST_KEU.reduce((s,p)=>s+p.totalHargaJual,0);
-  const totalHPP = PO_LIST_KEU.reduce((s,p)=>s+p.hpp,0);
-  const totalKeluar = jurnal.filter(j=>j.tipe==="keluar").reduce((s,j)=>s+j.jumlah,0);
-  const mE = totalPenjualan-totalHPP;
-  const mR = totalPenjualan-totalKeluar;
-  return (
-    <div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
-        {[
-          {label:"Total Penjualan",value:rp(totalPenjualan),color:C.text},
-          {label:"Margin Estimasi",value:rp(mE),color:C.cyan,sub:pct(mE,totalPenjualan)},
-          {label:"Margin Real",value:rp(mR),color:mR>=mE?C.green:C.red,sub:pct(mR,totalPenjualan)},
-          {label:"Gap Est vs Real",value:(mR-mE>=0?"+":"")+rp(mR-mE),color:mR>=mE?C.green:C.red},
-        ].map(k=>(
-          <div key={k.label} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 16px",borderLeft:`3px solid ${k.color}`}}>
-            <div style={{fontSize:8,color:C.textSub,fontFamily:C.sans,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:3}}>{k.label}</div>
-            <div style={{fontSize:15,fontWeight:800,color:k.color,fontFamily:C.syne}}>{k.value}</div>
-            {k.sub && <div style={{fontSize:9,color:C.textSub,fontFamily:C.mono,marginTop:2}}>{k.sub}</div>}
-          </div>
-        ))}
-      </div>
-      <Panel title="MARGIN PER PO — ESTIMASI VS REAL">
-        <div style={{overflowX:"auto"}}>
-          <table style={{width:"100%",borderCollapse:"collapse",minWidth:650}}>
-            <thead><tr style={{background:"#0e204055"}}>
-              {["PO","Model","Penjualan","HPP","Margin Est","Margin Real","Gap"].map(h=>(
-                <th key={h} style={{...TH_KEU,textAlign:h==="PO"||h==="Model"?"left":"right"}}>{h}</th>
-              ))}
-            </tr></thead>
-            <tbody>
-              {PO_LIST_KEU.map((po,i)=>{
-                const biaya = jurnal.filter(j=>j.idPO===po.kode&&j.tipe==="keluar").reduce((s,j)=>s+j.jumlah,0);
-                const me = po.totalHargaJual-po.hpp;
-                const mr = po.totalHargaJual-biaya;
-                return (
-                  <tr key={po.kode} style={{borderBottom:`1px solid ${C.border}`}}>
-                    <td style={TD_KEU(i)}><span style={{fontFamily:C.mono,fontWeight:700,color:C.cyan}}>{po.kode}</span></td>
-                    <td style={TD_KEU(i)}>{po.model}</td>
-                    <td style={{...TD_KEU(i),textAlign:"right"}}>{rp(po.totalHargaJual)}</td>
-                    <td style={{...TD_KEU(i),textAlign:"right",color:C.textSub}}>{rp(po.hpp)}</td>
-                    <td style={{...TD_KEU(i),textAlign:"right",color:C.cyan}}>{rp(me)}</td>
-                    <td style={{...TD_KEU(i),textAlign:"right",color:mr>=me?C.green:C.red}}>{rp(mr)}</td>
-                    <td style={{...TD_KEU(i),textAlign:"right",fontWeight:700,color:mr>=me?C.green:C.red}}>{(mr-me>=0?"+":"")+rp(mr-me)}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </Panel>
-    </div>
-  );
-}
-
-// ── MAIN EXPORT: TAB KEUANGAN ────────────────────────────────────────────────
-const TABS_KEU=[
-  {id:"ringkasan",   label:"Ringkasan",      color:C.cyan},
-  {id:"jurnal",      label:"Jurnal Umum",    color:C.green},
-  {id:"laporan_po",  label:"Laporan PO",     color:C.blue},
-  {id:"laporan_margin",label:"Laporan Margin",color:C.yellow},
-];
-
-function TabKeuangan({defaultTab="ringkasan", jurnal, setJurnal, inventory, setInventory, trxMasuk, setTrxMasuk}) {
-  const [activeTab,setActiveTab] = useState(defaultTab);
-  return (
-    <div>
-      <div style={{display:"flex",gap:6,marginBottom:20,paddingBottom:16,borderBottom:`1px solid ${C.border}`}}>
-        {TABS_KEU.map(t=>(
-          <button key={t.id} onClick={()=>setActiveTab(t.id)}
-            style={{padding:"7px 16px",fontSize:10,fontWeight:700,fontFamily:C.mono,
-              background:activeTab===t.id?`${t.color}22`:"transparent",
-              color:activeTab===t.id?t.color:C.textSub,
-              border:`1px solid ${activeTab===t.id?t.color+"55":C.border}`,
-              borderRadius:8,cursor:"pointer",transition:"all 0.1s"}}>
-            {t.label}
-          </button>
-        ))}
-      </div>
-      <div style={{marginBottom:14}}>
-        <div style={{fontSize:10,color:C.textSub,fontFamily:C.mono,letterSpacing:"0.07em"}}>
-          KEUANGAN / {TABS_KEU.find(t=>t.id===activeTab)?.label.toUpperCase()}
-        </div>
-      </div>
-      {activeTab==="ringkasan"      && <KeuRingkasan jurnal={jurnal}/>}
-      {activeTab==="jurnal"         && <JurnalUmum jurnal={jurnal} setJurnal={setJurnal} inventory={inventory} setInventory={setInventory} trxMasuk={trxMasuk} setTrxMasuk={setTrxMasuk}/>}
-      {activeTab==="laporan_po"     && <KeuLaporanPO jurnal={jurnal}/>}
-      {activeTab==="laporan_margin" && <KeuLaporanMargin jurnal={jurnal}/>}
-    </div>
-  );
-}
 
 // --- TAB LAPORAN ---
 
@@ -8162,18 +8022,6 @@ function LaporanReject() {
 
 const TABS_LAP=[{id:"per_bulan",label:"Budget vs Realisasi — Per Bulan",color:C.orange},{id:"per_po",label:"Budget vs Realisasi — Per PO",color:C.cyan},{id:"laporan_gaji",label:"Laporan Gaji",color:C.purple},{id:"laporan_reject",label:"Laporan Reject",color:C.red}];
 
-function TabLaporan({defaultTab="per_bulan"}) {
-  const [activeTab,setActiveTab]=useState(defaultTab);
-  return (
-    <div>
-      <div style={{marginBottom:14}}><div style={{fontSize:10,color:C.textSub,fontFamily:C.mono,letterSpacing:"0.07em"}}>LAPORAN / {TABS_LAP.find(t=>t.id===activeTab)?.label.toUpperCase()}</div></div>
-      {activeTab==="per_bulan"&&<LaporanPerBulan/>}
-      {activeTab==="per_po"&&<LaporanPerPO/>}
-      {activeTab==="laporan_gaji"&&<LaporanGaji/>}
-      {activeTab==="laporan_reject"&&<LaporanReject/>}
-    </div>
-  );
-}
 
 
 
@@ -8630,13 +8478,6 @@ export default function StitchlixApp() {
   }
 
   function renderContent() {
-    if (activeNav === "keuangan") {
-      if (activeSub === "Ringkasan")      return <TabKeuangan key="k_ringkas" defaultTab="ringkasan" jurnal={jurnal} setJurnal={setJurnal} inventory={inventory} setInventory={setInventory} trxMasuk={trxMasuk} setTrxMasuk={setTrxMasuk} />;
-      if (activeSub === "Laporan PO")     return <TabKeuangan key="k_po" defaultTab="laporan_po" jurnal={jurnal} setJurnal={setJurnal} inventory={inventory} setInventory={setInventory} trxMasuk={trxMasuk} setTrxMasuk={setTrxMasuk} />;
-      if (activeSub === "Laporan Margin") return <TabKeuangan key="k_margin" defaultTab="laporan_margin" jurnal={jurnal} setJurnal={setJurnal} inventory={inventory} setInventory={setInventory} trxMasuk={trxMasuk} setTrxMasuk={setTrxMasuk} />;
-      if (activeSub === "Jurnal Umum")    return <TabKeuangan key="k_jurnal" defaultTab="jurnal" jurnal={jurnal} setJurnal={setJurnal} inventory={inventory} setInventory={setInventory} trxMasuk={trxMasuk} setTrxMasuk={setTrxMasuk} />;
-    }
-
     if (activeNav === "master") {
       if (activeSub === "Master Detail") return <MasterDetail />;
       if (activeSub === "Produk & HPP") return <MasterProduk />;
@@ -8666,11 +8507,8 @@ export default function StitchlixApp() {
     }
 
     if (activeNav === "laporan") {
-      if (activeSub === "Budget vs Realisasi") return <TabLaporan key="l_bulan" defaultTab="per_bulan" />;
-      if (activeSub === "Laporan PO") return <TabLaporan key="l_po" defaultTab="per_po" />;
-      if (activeSub === "Laporan Gaji") return <TabLaporan key="l_gaji" defaultTab="laporan_gaji" />;
-      if (activeSub === "Laporan Reject") return <TabLaporan key="l_reject" defaultTab="laporan_reject" />;
-      if (activeSub === "Keuangan") return <TabLaporan key="l_keu" defaultTab="keuangan" />;
+      // Deprecated, merged into keuangan
+      return null;
     }
 
     if (activeNav === "produksi") {
@@ -8697,6 +8535,16 @@ export default function StitchlixApp() {
       if (activeSub === "Produksi")   return <DashProduksi onNavTo={navTo} />;
       if (activeSub === "Keuangan")   return <DashKeuangan />;
       if (activeSub === "Penggajian") return <DashPenggajian />;
+    }
+
+    if (activeNav === "keuangan") {
+      if (activeSub === "Ringkasan")      return <KeuRingkasan jurnal={jurnal} />;
+      if (activeSub === "Jurnal Umum")    return <JurnalUmum jurnal={jurnal} setJurnal={setJurnal} inventory={inventory} setInventory={setInventory} trxMasuk={trxMasuk} setTrxMasuk={setTrxMasuk} />;
+      if (activeSub === "Laporan Per PO") return <LaporanPerPO />;
+      if (activeSub === "Laporan Per Bulan") return <LaporanPerBulan />;
+      if (activeSub === "Laporan Gaji")   return <LaporanGaji />;
+      if (activeSub === "Laporan Reject") return <LaporanReject />;
+      return <KeuRingkasan jurnal={jurnal} />; // Default
     }
 
     return <Placeholder label={activeSub || curNav?.label} />;
